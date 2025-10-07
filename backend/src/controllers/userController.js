@@ -1,0 +1,153 @@
+const User = require('../models/User');
+const Settings = require('../models/Settings');
+const bcrypt = require('bcryptjs');
+
+// @desc    Get all users
+// @route   GET /api/users
+// @access  Private/Admin
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Create new user (by admin)
+// @route   POST /api/users
+// @access  Private/Admin
+exports.createUser = async (req, res) => {
+  try {
+    const { username, callsign, email, password, role } = req.body;
+
+    // Check if user exists
+    const userExists = await User.findOne({ 
+      $or: [{ email }, { username }, { callsign }] 
+    });
+
+    if (userExists) {
+      return res.status(400).json({ 
+        error: 'User with this email, username, or callsign already exists' 
+      });
+    }
+
+    // Create user
+    const user = await User.create({
+      username,
+      callsign: callsign.toUpperCase(),
+      email,
+      password,
+      role: role || 'operator'
+    });
+
+    // Create default settings for user
+    await Settings.create({
+      userId: user._id
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      callsign: user.callsign,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Delete user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent deleting yourself
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ error: 'You cannot delete your own account' });
+    }
+
+    // Delete user's settings
+    await Settings.deleteMany({ userId: user._id });
+
+    // Delete user
+    await User.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Reset user password
+// @route   PUT /api/users/:id/reset-password
+// @access  Private/Admin
+exports.resetPassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Update user role
+// @route   PUT /api/users/:id/role
+// @access  Private/Admin
+exports.updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    if (!['operator', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent changing your own role
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ error: 'You cannot change your own role' });
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      callsign: user.callsign,
+      email: user.email,
+      role: user.role
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
