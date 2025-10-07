@@ -1,3 +1,12 @@
+
+<img width="1308" height="924" alt="Screenshot 2025-10-07 at 2 38 02 PM" src="https://github.com/user-attachments/assets/8bfb2bf1-8871-48b5-939e-1d81c362bead" />
+<img width="1220" height="759" alt="Screenshot 2025-10-07 at 2 39 15 PM" src="https://github.com/user-attachments/assets/8344cd47-e21b-4b5d-887c-6cec707c5668" />
+<img width="1293" height="848" alt="Screenshot 2025-10-07 at 2 39 41 PM" src="https://github.com/user-attachments/assets/55d7e31a-b7b1-40e5-bf22-b8c90ae67156" />
+<img width="1245" height="1050" alt="Screenshot 2025-10-07 at 2 40 14 PM" src="https://github.com/user-attachments/assets/afe29d61-9600-4a64-88ec-0899c44265d8" />
+<img width="1238" height="652" alt="Screenshot 2025-10-07 at 2 40 41 PM" src="https://github.com/user-attachments/assets/23c8b45c-9a20-44a6-9b6a-dcc294805bec" />
+
+
+
 # Net Control by K4HEF
 
 A modern web application for Ham Radio Net Control Operators to manage net operations, track check-ins, and export reports.
@@ -74,6 +83,7 @@ cp .env.example .env
 ```
 JWT_SECRET=your_very_secure_jwt_secret_key_here
 ```
+Get a secret JWT Token here: https://jwtsecrets.com/#generator
 
 4. Start the application:
 ```bash
