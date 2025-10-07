@@ -74,6 +74,7 @@ cp .env.example .env
 ```
 JWT_SECRET=your_very_secure_jwt_secret_key_here
 ```
+Get a secret JWT Token here: https://jwtsecrets.com/#generator
 
 4. Start the application:
 ```bash
