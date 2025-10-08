@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
@@ -7,6 +8,7 @@ import { toast } from 'react-toastify';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
 const Schedule = () => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [operations, setOperations] = useState([]);
   const [selectedDateOps, setSelectedDateOps] = useState([]);
@@ -117,18 +119,14 @@ const Schedule = () => {
   };
 
   const handleStartNet = async (operationId) => {
-    if (!window.confirm('Are you sure you want to start this net operation now?')) {
-      return;
-    }
-
     setLoading(true);
     try {
       await startScheduledNet(operationId);
       toast.success('Net operation started!');
-      loadOperations();
+      // Navigate to Net Control page
+      navigate('/net-control');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to start net operation');
-    } finally {
       setLoading(false);
     }
   };
