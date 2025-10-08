@@ -390,6 +390,11 @@ textarea.form-control {
   color: var(--secondary-color);
 }
 
+.status-badge.scheduled {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning-color);
+}
+
 .operation-details p {
   margin: 0.5rem 0;
   color: var(--text-secondary);

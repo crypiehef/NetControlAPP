@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
-import { getNetOperations, exportNetOperationPDF, deleteNetOperation } from '../services/api';
+import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation } from '../services/api';
 import { toast } from 'react-toastify';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
@@ -11,6 +11,14 @@ const Schedule = () => {
   const [operations, setOperations] = useState([]);
   const [selectedDateOps, setSelectedDateOps] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [scheduleData, setScheduleData] = useState({
+    netName: 'York County Amateur Radio Society Net',
+    frequency: '',
+    notes: '',
+    startTime: '',
+    recurrence: 'none'
+  });
 
   useEffect(() => {
     loadOperations();
@@ -80,6 +88,34 @@ const Schedule = () => {
     }
   };
 
+  const handleScheduleNet = async (e) => {
+    e.preventDefault();
+    
+    if (!scheduleData.startTime) {
+      toast.error('Please select a date and time');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await scheduleNetOperation(scheduleData);
+      toast.success(result.message);
+      setScheduleData({
+        netName: 'York County Amateur Radio Society Net',
+        frequency: '',
+        notes: '',
+        startTime: '',
+        recurrence: 'none'
+      });
+      setShowScheduleForm(false);
+      loadOperations();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to schedule operation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getTileClassName = ({ date, view }) => {
     if (view === 'month') {
       const hasOperation = operations.some(op => {
@@ -94,7 +130,90 @@ const Schedule = () => {
     <div>
       <Navbar />
       <div className="container">
-        <h1>Schedule</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1>Schedule</h1>
+          <button 
+            onClick={() => setShowScheduleForm(!showScheduleForm)}
+            className="btn btn-primary"
+          >
+            {showScheduleForm ? 'Cancel' : '+ Schedule Future Net'}
+          </button>
+        </div>
+
+        {showScheduleForm && (
+          <div className="schedule-form-section" style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: 'var(--surface-color)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+            <h2>Schedule Future Net Operation</h2>
+            <form onSubmit={handleScheduleNet}>
+              <div className="form-group">
+                <label htmlFor="netName">Net Name</label>
+                <input
+                  type="text"
+                  id="netName"
+                  value={scheduleData.netName}
+                  onChange={(e) => setScheduleData({ ...scheduleData, netName: e.target.value })}
+                  className="form-control"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="startTime">Date & Time</label>
+                <input
+                  type="datetime-local"
+                  id="startTime"
+                  value={scheduleData.startTime}
+                  onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
+                  className="form-control"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="frequency">Frequency</label>
+                <input
+                  type="text"
+                  id="frequency"
+                  value={scheduleData.frequency}
+                  onChange={(e) => setScheduleData({ ...scheduleData, frequency: e.target.value })}
+                  className="form-control"
+                  placeholder="e.g., 146.520 MHz"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="recurrence">Repeat For</label>
+                <select
+                  id="recurrence"
+                  value={scheduleData.recurrence}
+                  onChange={(e) => setScheduleData({ ...scheduleData, recurrence: e.target.value })}
+                  className="form-control"
+                >
+                  <option value="none">No Repeat (One Time)</option>
+                  <option value="daily">Daily (Next 12 days)</option>
+                  <option value="weekly">Weekly (Next 12 weeks)</option>
+                  <option value="bi-weekly">Bi-Weekly (Next 12 occurrences)</option>
+                  <option value="monthly">Monthly (Next 12 months)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="notes">Notes</label>
+                <textarea
+                  id="notes"
+                  value={scheduleData.notes}
+                  onChange={(e) => setScheduleData({ ...scheduleData, notes: e.target.value })}
+                  className="form-control"
+                  rows="3"
+                  placeholder="Optional notes about this scheduled net"
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Scheduling...' : 'Schedule Net Operation'}
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="schedule-layout">
           <div className="calendar-section">

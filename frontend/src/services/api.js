@@ -55,6 +55,11 @@ export const deleteNetOperation = async (id) => {
   return response.data;
 };
 
+export const scheduleNetOperation = async (data) => {
+  const response = await axios.post(`${API_URL}/net-operations/schedule`, data);
+  return response.data;
+};
+
 // Settings
 export const getSettings = async () => {
   const response = await axios.get(`${API_URL}/settings`);

@@ -272,3 +272,77 @@ exports.deleteNetOperation = async (req, res) => {
   }
 };
 
+// @desc    Schedule future net operation(s)
+// @route   POST /api/net-operations/schedule
+// @access  Private
+exports.scheduleNetOperation = async (req, res) => {
+  try {
+    const { netName, frequency, notes, startTime, recurrence } = req.body;
+
+    const scheduledOps = [];
+    const baseDate = new Date(startTime);
+
+    // Create the first scheduled operation
+    const firstOp = await NetOperation.create({
+      operatorId: req.user._id,
+      operatorCallsign: req.user.callsign,
+      netName,
+      frequency,
+      notes,
+      startTime: baseDate,
+      status: 'scheduled',
+      isScheduled: true,
+      recurrence: recurrence || 'none'
+    });
+
+    scheduledOps.push(firstOp);
+
+    // If recurrence is set, create additional operations (up to 12 occurrences)
+    if (recurrence && recurrence !== 'none') {
+      const maxOccurrences = 12;
+      
+      for (let i = 1; i < maxOccurrences; i++) {
+        let nextDate = new Date(baseDate);
+        
+        switch (recurrence) {
+          case 'daily':
+            nextDate.setDate(baseDate.getDate() + i);
+            break;
+          case 'weekly':
+            nextDate.setDate(baseDate.getDate() + (i * 7));
+            break;
+          case 'bi-weekly':
+            nextDate.setDate(baseDate.getDate() + (i * 14));
+            break;
+          case 'monthly':
+            nextDate.setMonth(baseDate.getMonth() + i);
+            break;
+          default:
+            break;
+        }
+
+        const scheduledOp = await NetOperation.create({
+          operatorId: req.user._id,
+          operatorCallsign: req.user.callsign,
+          netName,
+          frequency,
+          notes,
+          startTime: nextDate,
+          status: 'scheduled',
+          isScheduled: true,
+          recurrence
+        });
+
+        scheduledOps.push(scheduledOp);
+      }
+    }
+
+    res.status(201).json({
+      message: `${scheduledOps.length} operation(s) scheduled successfully`,
+      operations: scheduledOps
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

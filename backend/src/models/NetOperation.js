@@ -67,8 +67,17 @@ const netOperationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'completed'],
+    enum: ['scheduled', 'active', 'completed'],
     default: 'active'
+  },
+  isScheduled: {
+    type: Boolean,
+    default: false
+  },
+  recurrence: {
+    type: String,
+    enum: ['none', 'daily', 'weekly', 'bi-weekly', 'monthly'],
+    default: 'none'
   }
 }, {
   timestamps: true
