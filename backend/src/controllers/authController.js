@@ -65,10 +65,10 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    // Check for user email
-    const user = await User.findOne({ email });
+    // Check for user by username
+    const user = await User.findOne({ username });
 
     if (user && (await user.comparePassword(password))) {
       res.json({
@@ -80,7 +80,7 @@ exports.login = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: 'Invalid username or password' });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
