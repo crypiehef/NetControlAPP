@@ -350,9 +350,10 @@ For issues, questions, or contributions, please contact K4HEF or open an issue i
 ## TO-DO
 Thanks to "Dom The Dorito" on Discord for the suggestions!
 
-- Allow Username login instead of email login (Callsign Login)
-- Ability to add the NET to the schedule without starting it.
+✅- Allow Username login instead of email login (Callsign Login)
+✅- Ability to add the NET to the schedule without starting it.
 
+✅ = Complete
 
 ---
 
