@@ -339,6 +339,79 @@ Toggle between light and dark mode using the theme button in the navbar or in th
 - `PUT /api/users/:id/reset-password` - Reset user password
 - `PUT /api/users/:id/role` - Update user role (operator/admin)
 
+## Updating the Application
+
+### Updating to Latest Version
+
+If you already have the app installed and want to update to the latest version:
+
+1. **Navigate to your app directory:**
+```bash
+cd NetControlAPP
+```
+
+2. **Stop the running containers:**
+```bash
+docker-compose down
+```
+
+3. **Fetch all updates from GitHub:**
+```bash
+git fetch --all --tags --prune
+```
+
+4. **Pull the latest changes:**
+```bash
+git pull origin main
+```
+
+5. **Rebuild and restart containers:**
+```bash
+docker-compose up -d --build
+```
+
+6. **Verify the update:**
+```bash
+# Check current version
+git describe --tags
+
+# View recent commits
+git log --oneline -5
+```
+
+### Updating to a Specific Version
+
+To update to a specific version (e.g., v1.2):
+
+```bash
+# Stop containers
+docker-compose down
+
+# Fetch all tags
+git fetch --all --tags
+
+# Checkout specific version
+git checkout v1.2
+
+# Rebuild containers
+docker-compose up -d --build
+```
+
+### Common Update Issues
+
+**Issue: "Already up to date" but features are missing**
+- Solution: Run `docker-compose up -d --build` to rebuild containers
+
+**Issue: Database errors after update**
+- Your data is preserved in Docker volumes
+- Check logs: `docker-compose logs backend`
+- If needed, restart: `docker-compose restart`
+
+**Issue: Port conflicts after update**
+- The app uses port 5001 (not 5000) for backend
+- Frontend uses port 80
+- Run `lsof -i :80` and `lsof -i :5001` to check for conflicts
+
 ## Docker Commands
 
 ### Start all services
@@ -361,13 +434,20 @@ docker-compose logs -f backend
 docker-compose logs -f frontend
 ```
 
-### Rebuild containers
+### Rebuild containers (after code changes)
 ```bash
 docker-compose up -d --build
 ```
 
+### Restart specific service
+```bash
+docker-compose restart backend
+docker-compose restart frontend
+```
+
 ### Remove all data (including database)
 ```bash
+# ⚠️ WARNING: This will delete all your data!
 docker-compose down -v
 ```
 
