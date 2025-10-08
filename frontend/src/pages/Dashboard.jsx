@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getNetOperations } from '../services/api';
+import { getNetOperations, startScheduledNet } from '../services/api';
 import Navbar from '../components/Navbar';
 import { toast } from 'react-toastify';
 
@@ -37,6 +37,19 @@ const Dashboard = () => {
     } catch (error) {
       toast.error('Error loading operations');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartNet = async (operationId) => {
+    setLoading(true);
+    try {
+      await startScheduledNet(operationId);
+      toast.success('Net operation started!');
+      // Navigate to Net Control page
+      navigate('/net-control');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to start net operation');
       setLoading(false);
     }
   };
@@ -102,6 +115,16 @@ const Dashboard = () => {
                     <p><strong>Start Time:</strong> {new Date(op.startTime).toLocaleString()}</p>
                     <p><strong>Check-ins:</strong> {op.checkIns.length}</p>
                   </div>
+                  {op.status === 'scheduled' && (
+                    <button 
+                      onClick={() => handleStartNet(op._id)}
+                      className="btn btn-primary"
+                      disabled={loading}
+                      style={{ marginTop: '10px' }}
+                    >
+                      ▶️ Start Net
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
