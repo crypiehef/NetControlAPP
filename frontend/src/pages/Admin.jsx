@@ -514,15 +514,21 @@ const Admin = () => {
         }
 
         .modal-content {
-          background: var(--card-bg);
+          background: var(--surface-color);
           padding: 30px;
           border-radius: 8px;
           max-width: 500px;
           width: 90%;
+          color: var(--text-color);
         }
 
         .modal-content h2 {
           margin-top: 0;
+          color: var(--text-color);
+        }
+
+        .modal-content label {
+          color: var(--text-color);
         }
 
         .modal-actions {
