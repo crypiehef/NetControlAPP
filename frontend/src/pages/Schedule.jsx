@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
-import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation } from '../services/api';
+import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet } from '../services/api';
 import { toast } from 'react-toastify';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
@@ -111,6 +111,23 @@ const Schedule = () => {
       loadOperations();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to schedule operation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartNet = async (operationId) => {
+    if (!window.confirm('Are you sure you want to start this net operation now?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await startScheduledNet(operationId);
+      toast.success('Net operation started!');
+      loadOperations();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to start net operation');
     } finally {
       setLoading(false);
     }
@@ -306,12 +323,24 @@ const Schedule = () => {
                       )}
                     </div>
 
-                    <button 
-                      onClick={() => handleExportPDF(op._id)}
-                      className="btn btn-primary"
-                    >
-                      Export to PDF
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      {op.status === 'scheduled' && (
+                        <button 
+                          onClick={() => handleStartNet(op._id)}
+                          className="btn btn-primary"
+                          disabled={loading}
+                        >
+                          ▶️ Start Net
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleExportPDF(op._id)}
+                        className="btn btn-primary"
+                        disabled={loading}
+                      >
+                        Export to PDF
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -346,3 +346,36 @@ exports.scheduleNetOperation = async (req, res) => {
   }
 };
 
+// @desc    Start a scheduled net operation
+// @route   PUT /api/net-operations/:id/start
+// @access  Private
+exports.startScheduledNet = async (req, res) => {
+  try {
+    const netOperation = await NetOperation.findById(req.params.id);
+
+    if (!netOperation) {
+      return res.status(404).json({ error: 'Net operation not found' });
+    }
+
+    // Check if user is the operator
+    if (netOperation.operatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to start this net operation' });
+    }
+
+    // Check if it's a scheduled operation
+    if (netOperation.status !== 'scheduled') {
+      return res.status(400).json({ error: 'This operation is not scheduled' });
+    }
+
+    // Update status to active and set current time as start time
+    netOperation.status = 'active';
+    netOperation.startTime = new Date();
+    netOperation.isScheduled = false;
+    await netOperation.save();
+
+    res.json(netOperation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

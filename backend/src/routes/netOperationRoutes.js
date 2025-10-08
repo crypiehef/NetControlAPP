@@ -11,7 +11,8 @@ const {
   exportToPDF,
   deleteCheckIn,
   deleteNetOperation,
-  scheduleNetOperation
+  scheduleNetOperation,
+  startScheduledNet
 } = require('../controllers/netOperationController');
 const auth = require('../middleware/auth');
 
@@ -22,6 +23,7 @@ router.get('/lookup/:callsign', auth, lookupCallsign);
 router.get('/:id', auth, getNetOperation);
 router.put('/:id', auth, updateNetOperation);
 router.put('/:id/complete', auth, completeNetOperation);
+router.put('/:id/start', auth, startScheduledNet);
 router.post('/:id/checkins', auth, addCheckIn);
 router.delete('/:id/checkins/:checkinId', auth, deleteCheckIn);
 router.delete('/:id', auth, deleteNetOperation);
