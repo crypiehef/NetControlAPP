@@ -118,3 +118,8 @@ export const updateUserRole = async (userId, role) => {
   return response.data;
 };
 
+export const updateUser = async (userId, userData) => {
+  const response = await axios.put(`${API_URL}/users/${userId}`, userData);
+  return response.data;
+};
+

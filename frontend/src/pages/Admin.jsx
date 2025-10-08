@@ -7,7 +7,8 @@ import {
   createUser, 
   deleteUser, 
   resetUserPassword,
-  updateUserRole 
+  updateUserRole,
+  updateUser
 } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -18,8 +19,14 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
+  const [editUserData, setEditUserData] = useState({
+    username: '',
+    callsign: '',
+    email: ''
+  });
   const [newUser, setNewUser] = useState({
     username: '',
     callsign: '',
@@ -127,6 +134,34 @@ const Admin = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    try {
+      await updateUser(selectedUser._id, editUserData);
+      toast.success('User updated successfully!');
+      setShowEditModal(false);
+      setSelectedUser(null);
+      setEditUserData({ username: '', callsign: '', email: '' });
+      loadUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditModal = (u) => {
+    setSelectedUser(u);
+    setEditUserData({
+      username: u.username,
+      callsign: u.callsign,
+      email: u.email
+    });
+    setShowEditModal(true);
   };
 
   return (
@@ -254,6 +289,14 @@ const Admin = () => {
                       <td>
                         <div className="action-buttons">
                           <button
+                            onClick={() => openEditModal(u)}
+                            className="btn btn-small btn-primary"
+                            disabled={loading}
+                            title="Edit User"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
                             onClick={() => {
                               setSelectedUser(u);
                               setShowResetModal(true);
@@ -320,6 +363,71 @@ const Admin = () => {
                       setShowResetModal(false);
                       setSelectedUser(null);
                       setNewPassword('');
+                    }} 
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit User Modal */}
+        {showEditModal && selectedUser && (
+          <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2>Edit User: {selectedUser.username}</h2>
+              <form onSubmit={handleEditUser}>
+                <div className="form-group">
+                  <label htmlFor="editUsername">Username</label>
+                  <input
+                    type="text"
+                    id="editUsername"
+                    value={editUserData.username}
+                    onChange={(e) => setEditUserData({ ...editUserData, username: e.target.value })}
+                    required
+                    minLength="3"
+                    className="form-control"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="editCallsign">Callsign</label>
+                  <input
+                    type="text"
+                    id="editCallsign"
+                    value={editUserData.callsign}
+                    onChange={(e) => setEditUserData({ ...editUserData, callsign: e.target.value.toUpperCase() })}
+                    required
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="editEmail">Email</label>
+                  <input
+                    type="email"
+                    id="editEmail"
+                    value={editUserData.email}
+                    onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
+                    required
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="modal-actions">
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
+                    {loading ? 'Updating...' : 'Update User'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setSelectedUser(null);
+                      setEditUserData({ username: '', callsign: '', email: '' });
                     }} 
                     className="btn btn-secondary"
                   >

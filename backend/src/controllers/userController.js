@@ -151,3 +151,57 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
+// @desc    Update user information
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+exports.updateUser = async (req, res) => {
+  try {
+    const { username, callsign, email } = req.body;
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if username is already taken by another user
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      user.username = username;
+    }
+
+    // Check if callsign is already taken by another user
+    if (callsign && callsign.toUpperCase() !== user.callsign) {
+      const existingUser = await User.findOne({ callsign: callsign.toUpperCase() });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Callsign already exists' });
+      }
+      user.callsign = callsign.toUpperCase();
+    }
+
+    // Check if email is already taken by another user
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+      user.email = email;
+    }
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      callsign: user.callsign,
+      email: user.email,
+      role: user.role
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
