@@ -297,9 +297,27 @@ exports.scheduleNetOperation = async (req, res) => {
 
     scheduledOps.push(firstOp);
 
-    // If recurrence is set, create additional operations (up to 12 occurrences)
+    // If recurrence is set, create additional operations (generate for 1 year ahead)
     if (recurrence && recurrence !== 'none') {
-      const maxOccurrences = 12;
+      let maxOccurrences;
+      
+      // Calculate occurrences for approximately 1 year
+      switch (recurrence) {
+        case 'daily':
+          maxOccurrences = 365; // 1 year of daily nets
+          break;
+        case 'weekly':
+          maxOccurrences = 52; // 1 year of weekly nets
+          break;
+        case 'bi-weekly':
+          maxOccurrences = 26; // 1 year of bi-weekly nets
+          break;
+        case 'monthly':
+          maxOccurrences = 12; // 1 year of monthly nets
+          break;
+        default:
+          maxOccurrences = 1;
+      }
       
       for (let i = 1; i < maxOccurrences; i++) {
         let nextDate = new Date(baseDate);

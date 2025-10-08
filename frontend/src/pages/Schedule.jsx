@@ -204,9 +204,9 @@ const Schedule = () => {
                   className="form-control"
                 >
                   <option value="none">No Repeat (One Time)</option>
-                  <option value="daily">Daily (Next 12 days)</option>
-                  <option value="weekly">Weekly (Next 12 weeks)</option>
-                  <option value="bi-weekly">Bi-Weekly (Next 12 occurrences)</option>
+                  <option value="daily">Daily (Next 365 days)</option>
+                  <option value="weekly">Weekly (Next 52 weeks)</option>
+                  <option value="bi-weekly">Bi-Weekly (Next 26 occurrences)</option>
                   <option value="monthly">Monthly (Next 12 months)</option>
                 </select>
               </div>
