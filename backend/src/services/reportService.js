@@ -120,6 +120,11 @@ class ReportService {
               
               doc.text(checkInText + (details.length > 0 ? ` (${details.join(', ')})` : ''));
               doc.text(`        Time: ${new Date(checkIn.timestamp).toLocaleTimeString()}`);
+              
+              // Display staying for comments status
+              const commentsStatus = checkIn.stayingForComments ? 'Staying for comments' : 'Not staying for comments';
+              doc.text(`        Comments: ${commentsStatus}`);
+              
               if (checkIn.notes) {
                 doc.text(`        Notes: ${checkIn.notes}`);
               }

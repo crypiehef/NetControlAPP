@@ -198,6 +198,7 @@ const NetControl = () => {
                         <th>License Class</th>
                         <th>Location</th>
                         <th>Time</th>
+                        <th>Comments</th>
                         <th>Notes</th>
                         <th>Actions</th>
                       </tr>
@@ -211,6 +212,13 @@ const NetControl = () => {
                           <td>{checkIn.license_class || '-'}</td>
                           <td>{checkIn.location || '-'}</td>
                           <td>{new Date(checkIn.timestamp).toLocaleTimeString()}</td>
+                          <td>
+                            {checkIn.stayingForComments ? (
+                              <span style={{ color: 'var(--success-color)', fontWeight: '600' }}>✓ Yes</span>
+                            ) : (
+                              <span style={{ color: 'var(--text-secondary)' }}>Not staying</span>
+                            )}
+                          </td>
                           <td>
                             {editingCheckIn === checkIn._id ? (
                               <div>

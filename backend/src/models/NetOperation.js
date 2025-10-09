@@ -22,6 +22,10 @@ const checkInSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  stayingForComments: {
+    type: Boolean,
+    default: false
+  },
   notes: {
     type: String,
     trim: true,

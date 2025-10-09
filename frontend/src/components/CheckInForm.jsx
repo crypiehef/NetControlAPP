@@ -8,6 +8,7 @@ const CheckInForm = ({ onSubmit }) => {
     name: '',
     location: '',
     license_class: '',
+    stayingForComments: false,
     notes: ''
   });
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ const CheckInForm = ({ onSubmit }) => {
       return;
     }
     onSubmit(formData);
-    setFormData({ callsign: '', name: '', location: '', license_class: '', notes: '' });
+    setFormData({ callsign: '', name: '', location: '', license_class: '', stayingForComments: false, notes: '' });
   };
 
   return (
@@ -103,6 +104,18 @@ const CheckInForm = ({ onSubmit }) => {
           placeholder="City, State (auto-filled from QRZ)"
           className="form-control"
         />
+      </div>
+
+      <div className="form-group">
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={formData.stayingForComments}
+            onChange={(e) => setFormData({ ...formData, stayingForComments: e.target.checked })}
+            style={{ width: 'auto', cursor: 'pointer' }}
+          />
+          <span>Staying for comments</span>
+        </label>
       </div>
 
       <div className="form-group">

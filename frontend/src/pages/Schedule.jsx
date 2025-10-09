@@ -406,6 +406,7 @@ const Schedule = () => {
                                 <th>Callsign</th>
                                 <th>Name</th>
                                 <th>Time</th>
+                                <th>Comments</th>
                                 <th>Notes</th>
                                 {op.status === 'completed' && <th>Actions</th>}
                               </tr>
@@ -417,6 +418,13 @@ const Schedule = () => {
                                   <td>{checkIn.callsign}</td>
                                   <td>{checkIn.name}</td>
                                   <td>{new Date(checkIn.timestamp).toLocaleTimeString()}</td>
+                                  <td>
+                                    {checkIn.stayingForComments ? (
+                                      <span style={{ color: 'var(--success-color)' }}>✓ Yes</span>
+                                    ) : (
+                                      <span style={{ color: 'var(--text-secondary)' }}>Not staying</span>
+                                    )}
+                                  </td>
                                   <td>
                                     {editingCheckIn === `${op._id}-${checkIn._id}` ? (
                                       <div>

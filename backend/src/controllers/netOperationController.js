@@ -106,7 +106,7 @@ exports.updateNetOperation = async (req, res) => {
 // @access  Private
 exports.addCheckIn = async (req, res) => {
   try {
-    const { callsign, name, location, license_class, notes } = req.body;
+    const { callsign, name, location, license_class, stayingForComments, notes } = req.body;
 
     const netOperation = await NetOperation.findById(req.params.id);
 
@@ -124,6 +124,7 @@ exports.addCheckIn = async (req, res) => {
       name,
       location: location || '',
       license_class: license_class || '',
+      stayingForComments: stayingForComments || false,
       notes,
       timestamp: new Date()
     });
