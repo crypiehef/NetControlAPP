@@ -268,46 +268,11 @@ exports.generateReport = async (req, res) => {
 
     console.log('Report request received:', { operatorId, startDate, endDate });
 
-    // Build query
-    let query = {};
-
-    // Filter by operator (if not "all")
-    if (operatorId && operatorId !== 'all') {
-      query.operatorId = operatorId;
-    }
-
-    // Filter by date range - if only one date is provided, use it for both start and end
-    if (startDate && !endDate) {
-      // Single date - get all operations on this day (use UTC)
-      const dayStart = new Date(startDate);
-      dayStart.setUTCHours(0, 0, 0, 0);
-      const dayEnd = new Date(startDate);
-      dayEnd.setUTCHours(23, 59, 59, 999);
-      query.startTime = { $gte: dayStart, $lte: dayEnd };
-    } else if (!startDate && endDate) {
-      // End date only - all operations up to this date
-      const dayEnd = new Date(endDate);
-      dayEnd.setUTCHours(23, 59, 59, 999);
-      query.startTime = { $lte: dayEnd };
-    } else if (startDate && endDate) {
-      // Date range (use UTC)
-      const rangeStart = new Date(startDate);
-      rangeStart.setUTCHours(0, 0, 0, 0);
-      const rangeEnd = new Date(endDate);
-      rangeEnd.setUTCHours(23, 59, 59, 999);
-      query.startTime = { $gte: rangeStart, $lte: rangeEnd };
-    }
-
-    console.log('Report Query with dates:', {
-      ...query,
-      startTime: query.startTime ? {
-        gte: query.startTime.$gte,
-        lte: query.startTime.$lte
-      } : undefined
-    });
-
-    // Build secure query with validated inputs
+    // Build secure query with validated inputs only
     let operations;
+    
+    // Validate operatorId if provided
+    let validatedOperatorId = null;
     if (operatorId && operatorId !== 'all') {
       // Validate operatorId format
       if (operatorId.length !== 24 || !operatorId.split('').every(char => 
@@ -320,24 +285,72 @@ exports.generateReport = async (req, res) => {
       
       // Use parameterized query with validated ObjectId
       const mongoose = require('mongoose');
-      let objectId;
       try {
-        objectId = new mongoose.Types.ObjectId(operatorId);
+        validatedOperatorId = new mongoose.Types.ObjectId(operatorId);
       } catch (error) {
         return res.status(400).json({ error: 'Invalid operator ID format' });
       }
-      
-      // Build secure query with validated ObjectId
-      const secureQuery = { ...query, operatorId: objectId };
-      operations = await NetOperation.find(secureQuery)
-        .populate('operatorId', 'username callsign')
-        .sort({ startTime: -1 });
-    } else {
-      // Use original query for 'all' operators
-      operations = await NetOperation.find(query)
-        .populate('operatorId', 'username callsign')
-        .sort({ startTime: -1 });
     }
+
+    // Build secure date filters
+    let dateFilter = {};
+    try {
+      // Filter by date range - validate and sanitize dates
+      if (startDate && !endDate) {
+        // Single date - get all operations on this day (use UTC)
+        const dayStart = new Date(startDate);
+        if (isNaN(dayStart.getTime())) {
+          return res.status(400).json({ error: 'Invalid start date format' });
+        }
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayEnd = new Date(startDate);
+        dayEnd.setUTCHours(23, 59, 59, 999);
+        dateFilter = { $gte: dayStart, $lte: dayEnd };
+      } else if (!startDate && endDate) {
+        // End date only - all operations up to this date
+        const dayEnd = new Date(endDate);
+        if (isNaN(dayEnd.getTime())) {
+          return res.status(400).json({ error: 'Invalid end date format' });
+        }
+        dayEnd.setUTCHours(23, 59, 59, 999);
+        dateFilter = { $lte: dayEnd };
+      } else if (startDate && endDate) {
+        // Date range (use UTC)
+        const rangeStart = new Date(startDate);
+        const rangeEnd = new Date(endDate);
+        if (isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
+          return res.status(400).json({ error: 'Invalid date format' });
+        }
+        rangeStart.setUTCHours(0, 0, 0, 0);
+        rangeEnd.setUTCHours(23, 59, 59, 999);
+        dateFilter = { $gte: rangeStart, $lte: rangeEnd };
+      }
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    // Build secure query object with only validated data
+    const secureQuery = {};
+    
+    // Add operator filter if validated
+    if (validatedOperatorId) {
+      secureQuery.operatorId = validatedOperatorId;
+    }
+    
+    // Add date filter if provided
+    if (Object.keys(dateFilter).length > 0) {
+      secureQuery.startTime = dateFilter;
+    }
+
+    console.log('Secure Report Query:', {
+      operatorId: validatedOperatorId ? 'validated' : 'none',
+      dateFilter: Object.keys(dateFilter).length > 0 ? 'applied' : 'none'
+    });
+
+    // Execute secure query
+    operations = await NetOperation.find(secureQuery)
+      .populate('operatorId', 'username callsign')
+      .sort({ startTime: -1 });
 
     console.log(`Found ${operations.length} operations for report`);
     if (operations.length > 0) {

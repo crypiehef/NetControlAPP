@@ -32,20 +32,41 @@ exports.createNetOperation = async (req, res) => {
 exports.getNetOperations = async (req, res) => {
   try {
     const { startDate, endDate, status } = req.query;
-    let query = {};
+    
+    // Build secure query with validated inputs only
+    const secureQuery = {};
 
+    // Validate and sanitize date range
     if (startDate && endDate) {
-      query.startTime = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
+      try {
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        
+        // Validate dates
+        if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+          return res.status(400).json({ error: 'Invalid date format' });
+        }
+        
+        // Ensure start date is before end date
+        if (startDateObj > endDateObj) {
+          return res.status(400).json({ error: 'Start date must be before end date' });
+        }
+        
+        secureQuery.startTime = {
+          $gte: startDateObj,
+          $lte: endDateObj
+        };
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid date format' });
+      }
     }
 
+    // Validate and sanitize status
     if (status && ['active', 'scheduled', 'completed'].includes(status)) {
-      query.status = { $eq: status };
+      secureQuery.status = { $eq: status };
     }
 
-    const netOperations = await NetOperation.find(query)
+    const netOperations = await NetOperation.find(secureQuery)
       .populate('operatorId', 'username callsign')
       .sort({ startTime: -1 });
 
