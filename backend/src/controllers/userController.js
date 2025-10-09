@@ -189,7 +189,10 @@ exports.updateUser = async (req, res) => {
       if (!validUsername) {
         return res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
       }
-      const existingUser = await User.findOne({ username: sanitizedUsername });
+      // Use parameterized query with additional validation
+      const existingUser = await User.findOne({ 
+        username: { $eq: sanitizedUsername } 
+      });
       if (existingUser) {
         return res.status(400).json({ error: 'Username already exists' });
       }
@@ -211,7 +214,10 @@ exports.updateUser = async (req, res) => {
       if (!validCallsign) {
         return res.status(400).json({ error: 'Callsign can only contain letters, numbers, and forward slashes' });
       }
-      const existingUser = await User.findOne({ callsign: sanitizedCallsign });
+      // Use parameterized query with additional validation
+      const existingUser = await User.findOne({ 
+        callsign: { $eq: sanitizedCallsign } 
+      });
       if (existingUser) {
         return res.status(400).json({ error: 'Callsign already exists' });
       }
@@ -229,7 +235,10 @@ exports.updateUser = async (req, res) => {
       if (domainParts.length < 2 || domainParts.some(part => part.length === 0)) {
         return res.status(400).json({ error: 'Invalid email format' });
       }
-      const existingUser = await User.findOne({ email });
+      // Use parameterized query with additional validation
+      const existingUser = await User.findOne({ 
+        email: { $eq: email } 
+      });
       if (existingUser) {
         return res.status(400).json({ error: 'Email already exists' });
       }
@@ -307,7 +316,8 @@ exports.generateReport = async (req, res) => {
       )) {
         return res.status(400).json({ error: 'Invalid operator ID format' });
       }
-      query.operatorId = operatorId;
+      // Use parameterized query with ObjectId validation
+      query.operatorId = { $eq: operatorId };
     }
 
     // Fetch operations with populated operator data
@@ -338,7 +348,8 @@ exports.generateReport = async (req, res) => {
         (char >= 'a' && char <= 'f') || 
         (char >= 'A' && char <= 'F')
       )) {
-        const operator = await User.findById(operatorId);
+        // Use parameterized query with ObjectId validation
+        const operator = await User.findOne({ _id: { $eq: operatorId } });
         if (operator) {
           operatorCallsign = operator.callsign;
         }

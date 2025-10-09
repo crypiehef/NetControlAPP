@@ -42,7 +42,7 @@ exports.getNetOperations = async (req, res) => {
     }
 
     if (status && ['active', 'scheduled', 'completed'].includes(status)) {
-      query.status = status;
+      query.status = { $eq: status };
     }
 
     const netOperations = await NetOperation.find(query)
@@ -105,8 +105,9 @@ exports.updateNetOperation = async (req, res) => {
       }
     });
 
-    const updatedNetOperation = await NetOperation.findByIdAndUpdate(
-      req.params.id,
+    // Use parameterized query with ObjectId validation
+    const updatedNetOperation = await NetOperation.findOneAndUpdate(
+      { _id: { $eq: req.params.id } },
       updates,
       { new: true, runValidators: true }
     );

@@ -83,8 +83,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Username contains invalid characters' });
     }
 
-    // Check for user by username
-    const user = await User.findOne({ username: sanitizedUsername });
+    // Check for user by username using parameterized query
+    const user = await User.findOne({ username: { $eq: sanitizedUsername } });
 
     if (user && (await user.comparePassword(password))) {
       res.json({
