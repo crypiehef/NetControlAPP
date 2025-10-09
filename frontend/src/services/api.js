@@ -70,6 +70,11 @@ export const updateNetNotes = async (id, notes) => {
   return response.data;
 };
 
+export const updateCheckInNotes = async (netOpId, checkInId, notes) => {
+  const response = await axios.put(`${API_URL}/net-operations/${netOpId}/checkins/${checkInId}/notes`, { notes });
+  return response.data;
+};
+
 // Settings
 export const getSettings = async () => {
   const response = await axios.get(`${API_URL}/settings`);

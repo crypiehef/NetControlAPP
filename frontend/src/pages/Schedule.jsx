@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
-import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes } from '../services/api';
+import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes, updateCheckInNotes } from '../services/api';
 import { toast } from 'react-toastify';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
@@ -23,6 +23,8 @@ const Schedule = () => {
   });
   const [editingNotes, setEditingNotes] = useState(null);
   const [editNotesText, setEditNotesText] = useState('');
+  const [editingCheckIn, setEditingCheckIn] = useState(null);
+  const [editCheckInNotesText, setEditCheckInNotesText] = useState('');
 
   useEffect(() => {
     loadOperations();
@@ -156,6 +158,31 @@ const Schedule = () => {
   const handleCancelEditNotes = () => {
     setEditingNotes(null);
     setEditNotesText('');
+  };
+
+  const handleEditCheckInNotes = (operationId, checkIn) => {
+    setEditingCheckIn(`${operationId}-${checkIn._id}`);
+    setEditCheckInNotesText(checkIn.notes || '');
+  };
+
+  const handleSaveCheckInNotes = async (operationId, checkInId) => {
+    setLoading(true);
+    try {
+      await updateCheckInNotes(operationId, checkInId, editCheckInNotesText);
+      toast.success('Check-in notes updated!');
+      setEditingCheckIn(null);
+      setEditCheckInNotesText('');
+      loadOperations();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update check-in notes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEditCheckInNotes = () => {
+    setEditingCheckIn(null);
+    setEditCheckInNotesText('');
   };
 
   const getTileClassName = ({ date, view }) => {
@@ -379,6 +406,8 @@ const Schedule = () => {
                                 <th>Callsign</th>
                                 <th>Name</th>
                                 <th>Time</th>
+                                <th>Notes</th>
+                                {op.status === 'completed' && <th>Actions</th>}
                               </tr>
                             </thead>
                             <tbody>
@@ -388,6 +417,50 @@ const Schedule = () => {
                                   <td>{checkIn.callsign}</td>
                                   <td>{checkIn.name}</td>
                                   <td>{new Date(checkIn.timestamp).toLocaleTimeString()}</td>
+                                  <td>
+                                    {editingCheckIn === `${op._id}-${checkIn._id}` ? (
+                                      <div>
+                                        <textarea
+                                          value={editCheckInNotesText}
+                                          onChange={(e) => setEditCheckInNotesText(e.target.value)}
+                                          className="form-control"
+                                          rows="2"
+                                          placeholder="Add notes..."
+                                          style={{ minWidth: '200px', marginBottom: '5px' }}
+                                        />
+                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                          <button
+                                            onClick={() => handleSaveCheckInNotes(op._id, checkIn._id)}
+                                            className="btn btn-small btn-primary"
+                                            disabled={loading}
+                                          >
+                                            💾 Save
+                                          </button>
+                                          <button
+                                            onClick={handleCancelEditCheckInNotes}
+                                            className="btn btn-small btn-secondary"
+                                            disabled={loading}
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      checkIn.notes || <em style={{ color: 'var(--text-secondary)' }}>-</em>
+                                    )}
+                                  </td>
+                                  {op.status === 'completed' && (
+                                    <td>
+                                      <button
+                                        onClick={() => handleEditCheckInNotes(op._id, checkIn)}
+                                        className="btn btn-small btn-secondary"
+                                        disabled={loading}
+                                        title="Edit Notes"
+                                      >
+                                        ✏️
+                                      </button>
+                                    </td>
+                                  )}
                                 </tr>
                               ))}
                             </tbody>
