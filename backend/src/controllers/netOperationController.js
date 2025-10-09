@@ -110,7 +110,7 @@ exports.updateNetOperation = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this net operation' });
     }
 
-    // Only allow specific fields to be updated with sanitization
+    // Only allow specific fields to be updated with strict validation
     const allowedUpdates = ['name', 'description', 'frequency', 'notes'];
     const updates = {};
     
@@ -120,9 +120,17 @@ exports.updateNetOperation = async (req, res) => {
       return str.replace(/[<>\"'%;()&+]/g, '').trim();
     };
     
-    Object.keys(req.body).forEach(key => {
-      if (allowedUpdates.includes(key)) {
-        updates[key] = sanitizeString(req.body[key]);
+    // Build secure updates object with validated data only
+    allowedUpdates.forEach(key => {
+      if (req.body[key] !== undefined) {
+        // Validate and sanitize each field individually
+        const value = req.body[key];
+        if (typeof value === 'string') {
+          updates[key] = sanitizeString(value);
+        } else if (typeof value === 'number' || typeof value === 'boolean') {
+          updates[key] = value;
+        }
+        // Ignore other types for security
       }
     });
 
