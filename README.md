@@ -1,9 +1,11 @@
 
-<img width="1308" height="924" alt="Screenshot 2025-10-07 at 2 38 02 PM" src="https://github.com/user-attachments/assets/8bfb2bf1-8871-48b5-939e-1d81c362bead" />
-<img width="1220" height="759" alt="Screenshot 2025-10-07 at 2 39 15 PM" src="https://github.com/user-attachments/assets/8344cd47-e21b-4b5d-887c-6cec707c5668" />
-<img width="1293" height="848" alt="Screenshot 2025-10-07 at 2 39 41 PM" src="https://github.com/user-attachments/assets/55d7e31a-b7b1-40e5-bf22-b8c90ae67156" />
-<img width="1245" height="1050" alt="Screenshot 2025-10-07 at 2 40 14 PM" src="https://github.com/user-attachments/assets/afe29d61-9600-4a64-88ec-0899c44265d8" />
-<img width="1238" height="652" alt="Screenshot 2025-10-07 at 2 40 41 PM" src="https://github.com/user-attachments/assets/23c8b45c-9a20-44a6-9b6a-dcc294805bec" />
+<img width="545" height="153" alt="bmc-button" src="https://github.com/user-attachments/assets/ca0f20cd-7b6b-46bd-958e-86ed9ed95535" /> https://buymeacoffee.com/hamradiohef
+<img width="1403" height="819" alt="Screenshot 2025-10-07 at 12 52 05 PM" src="https://github.com/user-attachments/assets/7183b52c-b24f-4813-99b1-13e4a3ac3aa2" />
+<img width="1213" height="874" alt="Screenshot 2025-10-08 at 9 02 51 PM" src="https://github.com/user-attachments/assets/dc598bf3-7da1-4c3e-beed-bbd9abd89e7d" />
+<img width="1272" height="842" alt="Screenshot 2025-10-08 at 9 03 16 PM" src="https://github.com/user-attachments/assets/df75d9a4-c958-4339-9c89-8f55e2742cc9" />
+<img width="1245" height="1027" alt="Screenshot 2025-10-08 at 9 03 40 PM" src="https://github.com/user-attachments/assets/ef239b82-fc90-4c21-b818-20b474d8e251" />
+<img width="1213" height="942" alt="Screenshot 2025-10-08 at 9 03 59 PM" src="https://github.com/user-attachments/assets/4e2dde6b-ceb1-42eb-a157-d51fce512ae1" />
+
 
 
 
