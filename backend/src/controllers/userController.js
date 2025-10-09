@@ -306,9 +306,10 @@ exports.generateReport = async (req, res) => {
       } : undefined
     });
 
-    // Validate operatorId if provided
+    // Build secure query with validated inputs
+    let operations;
     if (operatorId && operatorId !== 'all') {
-      // Simple MongoDB ObjectId validation to avoid regex vulnerabilities
+      // Validate operatorId format
       if (operatorId.length !== 24 || !operatorId.split('').every(char => 
         (char >= '0' && char <= '9') || 
         (char >= 'a' && char <= 'f') || 
@@ -316,14 +317,27 @@ exports.generateReport = async (req, res) => {
       )) {
         return res.status(400).json({ error: 'Invalid operator ID format' });
       }
-      // Use parameterized query with ObjectId validation
-      query.operatorId = { $eq: operatorId };
+      
+      // Use parameterized query with validated ObjectId
+      const mongoose = require('mongoose');
+      let objectId;
+      try {
+        objectId = new mongoose.Types.ObjectId(operatorId);
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid operator ID format' });
+      }
+      
+      // Build secure query with validated ObjectId
+      const secureQuery = { ...query, operatorId: objectId };
+      operations = await NetOperation.find(secureQuery)
+        .populate('operatorId', 'username callsign')
+        .sort({ startTime: -1 });
+    } else {
+      // Use original query for 'all' operators
+      operations = await NetOperation.find(query)
+        .populate('operatorId', 'username callsign')
+        .sort({ startTime: -1 });
     }
-
-    // Fetch operations with populated operator data
-    const operations = await NetOperation.find(query)
-      .populate('operatorId', 'username callsign')
-      .sort({ startTime: -1 });
 
     console.log(`Found ${operations.length} operations for report`);
     if (operations.length > 0) {

@@ -105,9 +105,26 @@ exports.updateNetOperation = async (req, res) => {
       }
     });
 
-    // Use parameterized query with ObjectId validation
+    // Validate and sanitize ObjectId to prevent injection
+    const mongoose = require('mongoose');
+    let objectId;
+    try {
+      // Validate ObjectId format first (avoid regex for security)
+      if (!req.params.id || req.params.id.length !== 24 || !req.params.id.split('').every(char => 
+        (char >= '0' && char <= '9') || 
+        (char >= 'a' && char <= 'f') || 
+        (char >= 'A' && char <= 'F')
+      )) {
+        return res.status(400).json({ error: 'Invalid operation ID format' });
+      }
+      objectId = new mongoose.Types.ObjectId(req.params.id);
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid operation ID format' });
+    }
+
+    // Use parameterized query with validated ObjectId
     const updatedNetOperation = await NetOperation.findOneAndUpdate(
-      { _id: { $eq: req.params.id } },
+      { _id: objectId },
       updates,
       { new: true, runValidators: true }
     );
