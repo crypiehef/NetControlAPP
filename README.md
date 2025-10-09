@@ -20,9 +20,11 @@ A modern web application for Ham Radio Net Control Operators to manage net opera
   - **Name** (auto-filled from QRZ)
   - **License Class** (auto-filled from QRZ, displayed next to name)
   - **Location** (City, State - auto-filled from QRZ)
-  - **Notes** (optional)
+  - **Staying for Comments** (checkbox to track who stays for post-net discussion)
+  - **Notes** (optional, editable during or after net)
 - Automatic callsign lookup via QRZ.com API integration
 - Real-time check-in tracking and management
+- **Edit check-in notes** during active net operations
 - Delete individual check-ins as needed
 - Complete net operations when finished
 
@@ -35,7 +37,11 @@ A modern web application for Ham Radio Net Control Operators to manage net opera
   - **Bi-Weekly** (26 occurrences ahead)
   - **Monthly** (12 months ahead)
 - **Start scheduled nets** from Dashboard or Schedule page with one click
-- View detailed information for each operation
+- **Edit operation notes** for completed nets
+- **Edit individual check-in notes** for any saved check-in
+- View detailed information for each operation including:
+  - Complete check-in lists with license class, location, and comment status
+  - Staying for Comments indicators
 - Export individual net operations to PDF with custom logo
 - Support for multiple nets per day with timestamps
 - Delete past net operations as needed
@@ -49,6 +55,21 @@ A modern web application for Ham Radio Net Control Operators to manage net opera
 - Personal preferences management
 
 ### 👨‍💼 Admin Panel (Admin Users Only)
+
+**Advanced Reporting:**
+- **Generate comprehensive PDF reports** with custom filters
+- **Filter by Operator**: All Operators or specific operator
+- **Filter by Date Range**: Start date, end date, or both (optional)
+- **Clear Filters button** for easy reset
+- **Professional PDF reports** include:
+  - Custom logo (PNG/JPEG)
+  - Summary statistics (total ops, status breakdown, check-ins, averages)
+  - Detailed operations list with all data
+  - Complete check-in information with license class, location, and comment status
+  - Operation notes and check-in notes
+  - Page numbers and generation timestamp
+
+**User Management:**
 - **User management dashboard** with full CRUD operations
 - **Add new net operators** with custom roles
 - **Edit user information**:
@@ -252,14 +273,33 @@ Toggle between light and dark mode using the theme button in the navbar or in th
    - License Class (appears next to name)
    - Location (City, State)
 4. All fields are editable - modify as needed
-5. Add optional notes
-6. Click "Add Check-in"
+5. **Check "Staying for comments"** if operator is staying for post-net discussion
+6. Add optional notes
+7. Click "Add Check-in"
 
-### Managing Check-ins
+### Managing Check-ins (During Active Net)
 
 - **View all check-ins** in the table with:
-  - Callsign, Name, License Class, Location, Time, Notes
-- **Remove check-ins** by clicking the "Remove" button
+  - Callsign, Name, License Class, Location, Time
+  - **Comments status**: "✓ Yes" or "Not staying"
+  - Notes (editable)
+- **Edit notes**: Click ✏️ button to add/modify notes for any check-in
+- **Remove check-ins**: Click "Remove" button to delete a check-in
+
+### Editing Completed Net Information (Schedule Page)
+
+**Edit Operation Notes:**
+1. Navigate to Schedule page
+2. Select a date with completed operations
+3. Click "✏️ Edit Notes" below the operation info
+4. Modify notes in the textarea
+5. Click "💾 Save Notes"
+
+**Edit Check-in Notes:**
+1. On the same operation card, scroll to check-ins table
+2. Click ✏️ in the Actions column for any check-in
+3. Edit notes in the inline textarea
+4. Click "💾 Save" or "Cancel"
 
 ### Completing a Net Operation
 
@@ -285,6 +325,21 @@ Toggle between light and dark mode using the theme button in the navbar or in th
    - Complete check-in list with all information
 
 ### Admin Functions (Admin Only)
+
+**Advanced Reporting:**
+1. Navigate to "Admin" page (only visible to admins)
+2. **Advanced Reporting** section at top of page
+3. **Select Filters:**
+   - **Operator**: Choose "All Operators" or specific operator from dropdown
+   - **Start Date**: Optional - leave blank for all-time
+   - **End Date**: Optional - leave blank for all-time
+4. **Click "📄 Generate PDF Report"**
+5. PDF downloads automatically with:
+   - Summary statistics
+   - Filtered operations list
+   - Complete check-in data
+   - All notes and comment status
+6. **Use "🔄 Clear Filters"** to reset all fields
 
 **User Management:**
 1. Navigate to "Admin" page (only visible to admins)
@@ -317,7 +372,9 @@ Toggle between light and dark mode using the theme button in the navbar or in th
 - `PUT /api/net-operations/:id` - Update operation
 - `PUT /api/net-operations/:id/start` - Start a scheduled net operation
 - `PUT /api/net-operations/:id/complete` - Complete operation
-- `POST /api/net-operations/:id/checkins` - Add check-in (with location & license class)
+- `PUT /api/net-operations/:id/notes` - Update operation notes
+- `POST /api/net-operations/:id/checkins` - Add check-in (with location, license class, stayingForComments)
+- `PUT /api/net-operations/:id/checkins/:checkinId/notes` - Update check-in notes
 - `DELETE /api/net-operations/:id/checkins/:checkinId` - Delete check-in
 - `DELETE /api/net-operations/:id` - Delete net operation
 - `GET /api/net-operations/lookup/:callsign` - Lookup callsign via QRZ
@@ -338,6 +395,7 @@ Toggle between light and dark mode using the theme button in the navbar or in th
 - `DELETE /api/users/:id` - Delete user
 - `PUT /api/users/:id/reset-password` - Reset user password
 - `PUT /api/users/:id/role` - Update user role (operator/admin)
+- `POST /api/users/reports/generate` - Generate PDF report with filters (operator, date range)
 
 ## Updating the Application
 
@@ -580,9 +638,49 @@ For issues, questions, or contributions, please contact K4HEF or open an issue i
 
 ## Version History
 
+### v2.1 - Advanced Reporting & Enhanced Operations Management (Current)
+**Major Release - Enterprise Features**
+
+**Advanced Reporting System:**
+- ✅ Generate comprehensive PDF reports from Admin panel
+- ✅ Multi-filter system (Operator, Date Range)
+- ✅ All Operators option for organization-wide reports
+- ✅ Professional PDF with summary statistics
+- ✅ Complete check-in data in reports
+- ✅ Custom logo support (PNG/JPEG)
+- ✅ Clear Filters button
+
+**Enhanced Note-Taking:**
+- ✅ Edit operation notes for completed nets
+- ✅ Edit individual check-in notes (during or after net)
+- ✅ Inline editing in Net Control and Schedule pages
+- ✅ All notes included in PDF reports
+
+**Staying for Comments Tracking:**
+- ✅ Checkbox in check-in form
+- ✅ Tracks who stays for post-net discussion
+- ✅ Visual indicators (✓ Yes / Not staying)
+- ✅ Appears in tables and PDF reports
+- ✅ Color-coded for easy scanning
+
+**Bug Fixes:**
+- ✅ WebP logo compatibility in PDFs
+- ✅ UTC date handling for accurate filtering
+- ✅ Operation notes now included in PDF reports
+
+### v1.2 - Enhanced Scheduling & User Management
+- ✅ Schedule future nets without starting (Thanks Dom The Dorito!)
+- ✅ Recurring net scheduling (Daily, Weekly, Bi-Weekly, Monthly)
+- ✅ Full year-ahead recurring schedules (365 daily, 52 weekly, etc.)
+- ✅ Start scheduled nets from Dashboard and Schedule page
+- ✅ Auto-navigation to Net Control after starting
+- ✅ Edit user information in Admin panel
+- ✅ Delete operations from Schedule
+- ✅ Location and license class fields in check-ins
+
 ### v1.0.1 - Security & UX Updates
 - ✅ Fixed all multer vulnerabilities (upgraded to 2.0.0)
-- ✅ Changed login from email to username
+- ✅ Username login instead of email (Thanks Dom The Dorito!)
 - ✅ Fixed calendar dark mode text readability
 - ✅ Fixed modal text readability in light mode
 - ✅ Enhanced error handling for file uploads
@@ -595,19 +693,8 @@ For issues, questions, or contributions, please contact K4HEF or open an issue i
 - Schedule calendar with PDF export
 - Admin panel for user management
 - Theme switching with persistence
-- Custom logo upload
-- User authentication
-
-**Recent Additions:**
-- ✅ Username login instead of email (Thanks Dom The Dorito!)
-- ✅ Schedule future nets without starting (Thanks Dom The Dorito!)
-- ✅ Location and license class fields in check-ins
-- ✅ Recurring net scheduling (Daily, Weekly, Bi-Weekly, Monthly)
-- ✅ Start scheduled nets from Dashboard and Schedule page
-- ✅ Edit user information in Admin panel
-- ✅ Delete operations from Schedule
-- ✅ WebP image support for logos
-- ✅ Full year-ahead recurring schedules
+- Custom logo upload (WebP, PNG, JPEG, GIF, SVG)
+- User authentication with JWT
 
 ## Acknowledgments
 
