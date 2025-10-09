@@ -17,21 +17,28 @@ const {
   updateCheckInNotes
 } = require('../controllers/netOperationController');
 const auth = require('../middleware/auth');
+const { apiLimiter } = require('../middleware/rateLimiter');
+const { 
+  validateNetOperation, 
+  validateCheckIn, 
+  validateMongoId, 
+  validateReportQuery 
+} = require('../middleware/validation');
 
-router.post('/', auth, createNetOperation);
-router.post('/schedule', auth, scheduleNetOperation);
-router.get('/', auth, getNetOperations);
-router.get('/lookup/:callsign', auth, lookupCallsign);
-router.get('/:id', auth, getNetOperation);
-router.put('/:id', auth, updateNetOperation);
-router.put('/:id/complete', auth, completeNetOperation);
-router.put('/:id/start', auth, startScheduledNet);
-router.put('/:id/notes', auth, updateNetNotes);
-router.put('/:id/checkins/:checkinId/notes', auth, updateCheckInNotes);
-router.post('/:id/checkins', auth, addCheckIn);
-router.delete('/:id/checkins/:checkinId', auth, deleteCheckIn);
-router.delete('/:id', auth, deleteNetOperation);
-router.get('/:id/pdf', auth, exportToPDF);
+router.post('/', apiLimiter, auth, validateNetOperation, createNetOperation);
+router.post('/schedule', apiLimiter, auth, validateNetOperation, scheduleNetOperation);
+router.get('/', apiLimiter, auth, validateReportQuery, getNetOperations);
+router.get('/lookup/:callsign', apiLimiter, auth, lookupCallsign);
+router.get('/:id', apiLimiter, auth, validateMongoId, getNetOperation);
+router.put('/:id', apiLimiter, auth, validateMongoId, validateNetOperation, updateNetOperation);
+router.put('/:id/complete', apiLimiter, auth, validateMongoId, completeNetOperation);
+router.put('/:id/start', apiLimiter, auth, validateMongoId, startScheduledNet);
+router.put('/:id/notes', apiLimiter, auth, validateMongoId, updateNetNotes);
+router.put('/:id/checkins/:checkinId/notes', apiLimiter, auth, validateMongoId, updateCheckInNotes);
+router.post('/:id/checkins', apiLimiter, auth, validateMongoId, validateCheckIn, addCheckIn);
+router.delete('/:id/checkins/:checkinId', apiLimiter, auth, validateMongoId, deleteCheckIn);
+router.delete('/:id', apiLimiter, auth, validateMongoId, deleteNetOperation);
+router.get('/:id/pdf', apiLimiter, auth, validateMongoId, exportToPDF);
 
 module.exports = router;
 

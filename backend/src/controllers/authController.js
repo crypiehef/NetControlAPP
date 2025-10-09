@@ -67,8 +67,17 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // Validate and sanitize username input
+    const sanitizedUsername = username.trim();
+    if (sanitizedUsername.length < 3 || sanitizedUsername.length > 30) {
+      return res.status(400).json({ error: 'Invalid username format' });
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(sanitizedUsername)) {
+      return res.status(400).json({ error: 'Username contains invalid characters' });
+    }
+
     // Check for user by username
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username: sanitizedUsername });
 
     if (user && (await user.comparePassword(password))) {
       res.json({

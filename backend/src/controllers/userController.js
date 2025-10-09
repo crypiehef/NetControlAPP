@@ -167,26 +167,50 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Validate and sanitize inputs
+    const sanitizeString = (str) => {
+      if (typeof str !== 'string') return str;
+      return str.replace(/[<>\"'%;()&+]/g, '').trim();
+    };
+
     // Check if username is already taken by another user
     if (username && username !== user.username) {
-      const existingUser = await User.findOne({ username });
+      const sanitizedUsername = sanitizeString(username);
+      if (sanitizedUsername.length < 3 || sanitizedUsername.length > 30) {
+        return res.status(400).json({ error: 'Username must be 3-30 characters' });
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(sanitizedUsername)) {
+        return res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+      }
+      const existingUser = await User.findOne({ username: sanitizedUsername });
       if (existingUser) {
         return res.status(400).json({ error: 'Username already exists' });
       }
-      user.username = username;
+      user.username = sanitizedUsername;
     }
 
     // Check if callsign is already taken by another user
     if (callsign && callsign.toUpperCase() !== user.callsign) {
-      const existingUser = await User.findOne({ callsign: callsign.toUpperCase() });
+      const sanitizedCallsign = sanitizeString(callsign).toUpperCase();
+      if (sanitizedCallsign.length < 3 || sanitizedCallsign.length > 10) {
+        return res.status(400).json({ error: 'Callsign must be 3-10 characters' });
+      }
+      if (!/^[A-Z0-9/]+$/.test(sanitizedCallsign)) {
+        return res.status(400).json({ error: 'Callsign can only contain letters, numbers, and forward slashes' });
+      }
+      const existingUser = await User.findOne({ callsign: sanitizedCallsign });
       if (existingUser) {
         return res.status(400).json({ error: 'Callsign already exists' });
       }
-      user.callsign = callsign.toUpperCase();
+      user.callsign = sanitizedCallsign;
     }
 
     // Check if email is already taken by another user
     if (email && email !== user.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ error: 'Email already exists' });
@@ -255,6 +279,14 @@ exports.generateReport = async (req, res) => {
       } : undefined
     });
 
+    // Validate operatorId if provided
+    if (operatorId && operatorId !== 'all') {
+      if (!/^[0-9a-fA-F]{24}$/.test(operatorId)) {
+        return res.status(400).json({ error: 'Invalid operator ID format' });
+      }
+      query.operatorId = operatorId;
+    }
+
     // Fetch operations with populated operator data
     const operations = await NetOperation.find(query)
       .populate('operatorId', 'username callsign')
@@ -277,9 +309,12 @@ exports.generateReport = async (req, res) => {
     // Get operator info for report
     let operatorCallsign = 'All Operators';
     if (operatorId && operatorId !== 'all') {
-      const operator = await User.findById(operatorId);
-      if (operator) {
-        operatorCallsign = operator.callsign;
+      // Validate operatorId format before querying
+      if (/^[0-9a-fA-F]{24}$/.test(operatorId)) {
+        const operator = await User.findById(operatorId);
+        if (operator) {
+          operatorCallsign = operator.callsign;
+        }
       }
     }
 

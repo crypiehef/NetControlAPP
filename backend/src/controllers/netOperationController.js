@@ -41,7 +41,7 @@ exports.getNetOperations = async (req, res) => {
       };
     }
 
-    if (status) {
+    if (status && ['active', 'scheduled', 'completed'].includes(status)) {
       query.status = status;
     }
 
@@ -89,9 +89,19 @@ exports.updateNetOperation = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this net operation' });
     }
 
+    // Only allow specific fields to be updated
+    const allowedUpdates = ['name', 'description', 'frequency', 'notes'];
+    const updates = {};
+    
+    Object.keys(req.body).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
     const updatedNetOperation = await NetOperation.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updates,
       { new: true, runValidators: true }
     );
 
