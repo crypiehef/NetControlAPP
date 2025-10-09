@@ -101,6 +101,11 @@ class ReportService {
             doc.text(`   Frequency: ${op.frequency}`);
           }
           doc.text(`   Check-ins: ${op.checkIns.length}`);
+          
+          // Display operation notes if they exist
+          if (op.notes) {
+            doc.text(`   Notes: ${op.notes}`);
+          }
 
           // List check-ins if any
           if (op.checkIns.length > 0) {
