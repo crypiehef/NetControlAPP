@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const Settings = require('../models/Settings');
+const NetOperation = require('../models/NetOperation');
 const bcrypt = require('bcryptjs');
+const reportService = require('../services/reportService');
+const path = require('path');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -200,6 +203,79 @@ exports.updateUser = async (req, res) => {
       email: user.email,
       role: user.role
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Generate operations report
+// @route   POST /api/users/reports/generate
+// @access  Private/Admin
+exports.generateReport = async (req, res) => {
+  try {
+    const { operatorId, startDate, endDate } = req.body;
+
+    // Build query
+    let query = {};
+
+    // Filter by operator (if not "all")
+    if (operatorId && operatorId !== 'all') {
+      query.operatorId = operatorId;
+    }
+
+    // Filter by date range
+    if (startDate || endDate) {
+      query.startTime = {};
+      if (startDate) {
+        query.startTime.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Add one day to include the end date fully
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        query.startTime.$lte = endDateTime;
+      }
+    }
+
+    // Fetch operations with populated operator data
+    const operations = await NetOperation.find(query)
+      .populate('operatorId', 'username callsign')
+      .sort({ startTime: -1 });
+
+    if (operations.length === 0) {
+      return res.status(404).json({ error: 'No operations found matching the criteria' });
+    }
+
+    // Get operator info for report
+    let operatorCallsign = 'All Operators';
+    if (operatorId && operatorId !== 'all') {
+      const operator = await User.findById(operatorId);
+      if (operator) {
+        operatorCallsign = operator.callsign;
+      }
+    }
+
+    // Get admin's logo if available
+    const settings = await Settings.findOne({ userId: req.user._id });
+    let logoPath = null;
+    
+    if (settings && settings.logo) {
+      logoPath = path.join(__dirname, '../../uploads', path.basename(settings.logo));
+    }
+
+    // Generate PDF
+    const filters = {
+      operator: operatorId,
+      operatorCallsign,
+      startDate,
+      endDate
+    };
+
+    const pdfBuffer = await reportService.generateOperationsReport(operations, filters, logoPath);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=net-operations-report-${Date.now()}.pdf`);
+    res.send(pdfBuffer);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -123,3 +123,10 @@ export const updateUser = async (userId, userData) => {
   return response.data;
 };
 
+export const generateOperationsReport = async (filters) => {
+  const response = await axios.post(`${API_URL}/users/reports/generate`, filters, {
+    responseType: 'blob'
+  });
+  return response.data;
+};
+

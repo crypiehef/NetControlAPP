@@ -8,7 +8,8 @@ import {
   deleteUser, 
   resetUserPassword,
   updateUserRole,
-  updateUser
+  updateUser,
+  generateOperationsReport
 } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -33,6 +34,11 @@ const Admin = () => {
     email: '',
     password: '',
     role: 'operator'
+  });
+  const [reportFilters, setReportFilters] = useState({
+    operatorId: 'all',
+    startDate: '',
+    endDate: ''
   });
 
   useEffect(() => {
@@ -164,12 +170,90 @@ const Admin = () => {
     setShowEditModal(true);
   };
 
+  const handleGenerateReport = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    try {
+      const pdfBlob = await generateOperationsReport(reportFilters);
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `net-operations-report-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Report generated successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to generate report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       <Navbar />
       <div className="container">
-        <h1>Admin - User Management</h1>
+        <h1>Admin Panel</h1>
 
+        {/* Advanced Reporting Section */}
+        <div className="reporting-section" style={{ marginBottom: '3rem', padding: '1.5rem', backgroundColor: 'var(--surface-color)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+          <h2>📊 Advanced Reporting</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            Generate comprehensive PDF reports with custom filters
+          </p>
+          
+          <form onSubmit={handleGenerateReport}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label htmlFor="reportOperator">Filter by Operator</label>
+                <select
+                  id="reportOperator"
+                  value={reportFilters.operatorId}
+                  onChange={(e) => setReportFilters({ ...reportFilters, operatorId: e.target.value })}
+                  className="form-control"
+                >
+                  <option value="all">All Operators</option>
+                  {users.map(u => (
+                    <option key={u._id} value={u._id}>
+                      {u.callsign} - {u.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="reportStartDate">Start Date</label>
+                <input
+                  type="date"
+                  id="reportStartDate"
+                  value={reportFilters.startDate}
+                  onChange={(e) => setReportFilters({ ...reportFilters, startDate: e.target.value })}
+                  className="form-control"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="reportEndDate">End Date</label>
+                <input
+                  type="date"
+                  id="reportEndDate"
+                  value={reportFilters.endDate}
+                  onChange={(e) => setReportFilters({ ...reportFilters, endDate: e.target.value })}
+                  className="form-control"
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Generating Report...' : '📄 Generate PDF Report'}
+            </button>
+          </form>
+        </div>
+
+        <h2>User Management</h2>
         <div className="admin-actions">
           <button 
             onClick={() => setShowAddForm(!showAddForm)} 
