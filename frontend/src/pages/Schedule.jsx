@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
-import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet } from '../services/api';
+import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes } from '../services/api';
 import { toast } from 'react-toastify';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
@@ -21,6 +21,8 @@ const Schedule = () => {
     startTime: '',
     recurrence: 'none'
   });
+  const [editingNotes, setEditingNotes] = useState(null);
+  const [editNotesText, setEditNotesText] = useState('');
 
   useEffect(() => {
     loadOperations();
@@ -129,6 +131,31 @@ const Schedule = () => {
       toast.error(error.response?.data?.error || 'Failed to start net operation');
       setLoading(false);
     }
+  };
+
+  const handleEditNotes = (operation) => {
+    setEditingNotes(operation._id);
+    setEditNotesText(operation.notes || '');
+  };
+
+  const handleSaveNotes = async (operationId) => {
+    setLoading(true);
+    try {
+      await updateNetNotes(operationId, editNotesText);
+      toast.success('Notes updated successfully!');
+      setEditingNotes(null);
+      setEditNotesText('');
+      loadOperations();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update notes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEditNotes = () => {
+    setEditingNotes(null);
+    setEditNotesText('');
   };
 
   const getTileClassName = ({ date, view }) => {
@@ -288,7 +315,55 @@ const Schedule = () => {
                       <p><strong>Net Control:</strong> {op.operatorCallsign}</p>
                       {op.frequency && <p><strong>Frequency:</strong> {op.frequency}</p>}
                       <p><strong>Total Check-ins:</strong> {op.checkIns.length}</p>
-                      {op.notes && <p><strong>Notes:</strong> {op.notes}</p>}
+                      
+                      {/* Notes section with edit capability for completed nets */}
+                      <div style={{ marginTop: '10px' }}>
+                        <strong>Notes:</strong>
+                        {editingNotes === op._id ? (
+                          <div style={{ marginTop: '5px' }}>
+                            <textarea
+                              value={editNotesText}
+                              onChange={(e) => setEditNotesText(e.target.value)}
+                              className="form-control"
+                              rows="3"
+                              placeholder="Add notes about this net operation..."
+                              style={{ marginBottom: '10px' }}
+                            />
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                              <button
+                                onClick={() => handleSaveNotes(op._id)}
+                                className="btn btn-small btn-primary"
+                                disabled={loading}
+                              >
+                                💾 Save Notes
+                              </button>
+                              <button
+                                onClick={handleCancelEditNotes}
+                                className="btn btn-small btn-secondary"
+                                disabled={loading}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'start', gap: '10px', marginTop: '5px' }}>
+                            <p style={{ flex: 1, margin: 0 }}>
+                              {op.notes || <em style={{ color: 'var(--text-secondary)' }}>No notes added</em>}
+                            </p>
+                            {op.status === 'completed' && (
+                              <button
+                                onClick={() => handleEditNotes(op)}
+                                className="btn btn-small btn-secondary"
+                                disabled={loading}
+                                title="Edit Notes"
+                              >
+                                ✏️ Edit Notes
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="checkins-summary">

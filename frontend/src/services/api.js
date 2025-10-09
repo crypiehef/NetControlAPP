@@ -65,6 +65,11 @@ export const startScheduledNet = async (id) => {
   return response.data;
 };
 
+export const updateNetNotes = async (id, notes) => {
+  const response = await axios.put(`${API_URL}/net-operations/${id}/notes`, { notes });
+  return response.data;
+};
+
 // Settings
 export const getSettings = async () => {
   const response = await axios.get(`${API_URL}/settings`);

@@ -397,3 +397,29 @@ exports.startScheduledNet = async (req, res) => {
   }
 };
 
+// @desc    Update net operation notes
+// @route   PUT /api/net-operations/:id/notes
+// @access  Private
+exports.updateNetNotes = async (req, res) => {
+  try {
+    const { notes } = req.body;
+    const netOperation = await NetOperation.findById(req.params.id);
+
+    if (!netOperation) {
+      return res.status(404).json({ error: 'Net operation not found' });
+    }
+
+    // Check if user is the operator or admin
+    if (netOperation.operatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to edit this net operation' });
+    }
+
+    netOperation.notes = notes || '';
+    await netOperation.save();
+
+    res.json(netOperation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
