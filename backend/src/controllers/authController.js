@@ -72,7 +72,14 @@ exports.login = async (req, res) => {
     if (sanitizedUsername.length < 3 || sanitizedUsername.length > 30) {
       return res.status(400).json({ error: 'Invalid username format' });
     }
-    if (!/^[a-zA-Z0-9_]+$/.test(sanitizedUsername)) {
+    // Simple character validation to avoid regex vulnerabilities
+    const validUsername = sanitizedUsername.split('').every(char => 
+      (char >= 'a' && char <= 'z') || 
+      (char >= 'A' && char <= 'Z') || 
+      (char >= '0' && char <= '9') || 
+      char === '_'
+    );
+    if (!validUsername) {
       return res.status(400).json({ error: 'Username contains invalid characters' });
     }
 

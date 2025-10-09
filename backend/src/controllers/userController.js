@@ -179,7 +179,14 @@ exports.updateUser = async (req, res) => {
       if (sanitizedUsername.length < 3 || sanitizedUsername.length > 30) {
         return res.status(400).json({ error: 'Username must be 3-30 characters' });
       }
-      if (!/^[a-zA-Z0-9_]+$/.test(sanitizedUsername)) {
+      // Simple character validation to avoid regex vulnerabilities
+      const validUsername = sanitizedUsername.split('').every(char => 
+        (char >= 'a' && char <= 'z') || 
+        (char >= 'A' && char <= 'Z') || 
+        (char >= '0' && char <= '9') || 
+        char === '_'
+      );
+      if (!validUsername) {
         return res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
       }
       const existingUser = await User.findOne({ username: sanitizedUsername });
@@ -195,7 +202,13 @@ exports.updateUser = async (req, res) => {
       if (sanitizedCallsign.length < 3 || sanitizedCallsign.length > 10) {
         return res.status(400).json({ error: 'Callsign must be 3-10 characters' });
       }
-      if (!/^[A-Z0-9/]+$/.test(sanitizedCallsign)) {
+      // Simple character validation to avoid regex vulnerabilities
+      const validCallsign = sanitizedCallsign.split('').every(char => 
+        (char >= 'A' && char <= 'Z') || 
+        (char >= '0' && char <= '9') || 
+        char === '/'
+      );
+      if (!validCallsign) {
         return res.status(400).json({ error: 'Callsign can only contain letters, numbers, and forward slashes' });
       }
       const existingUser = await User.findOne({ callsign: sanitizedCallsign });
@@ -207,8 +220,13 @@ exports.updateUser = async (req, res) => {
 
     // Check if email is already taken by another user
     if (email && email !== user.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
+      // Simple email validation to avoid regex vulnerabilities
+      const emailParts = email.split('@');
+      if (emailParts.length !== 2 || emailParts[0].length === 0 || emailParts[1].length === 0) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
+      const domainParts = emailParts[1].split('.');
+      if (domainParts.length < 2 || domainParts.some(part => part.length === 0)) {
         return res.status(400).json({ error: 'Invalid email format' });
       }
       const existingUser = await User.findOne({ email });
@@ -281,7 +299,12 @@ exports.generateReport = async (req, res) => {
 
     // Validate operatorId if provided
     if (operatorId && operatorId !== 'all') {
-      if (!/^[0-9a-fA-F]{24}$/.test(operatorId)) {
+      // Simple MongoDB ObjectId validation to avoid regex vulnerabilities
+      if (operatorId.length !== 24 || !operatorId.split('').every(char => 
+        (char >= '0' && char <= '9') || 
+        (char >= 'a' && char <= 'f') || 
+        (char >= 'A' && char <= 'F')
+      )) {
         return res.status(400).json({ error: 'Invalid operator ID format' });
       }
       query.operatorId = operatorId;
@@ -309,8 +332,12 @@ exports.generateReport = async (req, res) => {
     // Get operator info for report
     let operatorCallsign = 'All Operators';
     if (operatorId && operatorId !== 'all') {
-      // Validate operatorId format before querying
-      if (/^[0-9a-fA-F]{24}$/.test(operatorId)) {
+      // Validate operatorId format before querying (avoid regex vulnerabilities)
+      if (operatorId.length === 24 && operatorId.split('').every(char => 
+        (char >= '0' && char <= '9') || 
+        (char >= 'a' && char <= 'f') || 
+        (char >= 'A' && char <= 'F')
+      )) {
         const operator = await User.findById(operatorId);
         if (operator) {
           operatorCallsign = operator.callsign;

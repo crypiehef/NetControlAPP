@@ -48,7 +48,6 @@ const validateCheckIn = [
   body('callsign')
     .isString()
     .isLength({ min: 3, max: 10 })
-    .matches(/^[A-Z0-9/]+$/)
     .customSanitizer(val => val.toUpperCase()),
   body('name')
     .optional()
@@ -81,13 +80,11 @@ const validateUpdateUser = [
     .optional()
     .isString()
     .isLength({ min: 3, max: 30 })
-    .matches(/^[a-zA-Z0-9_]+$/)
     .customSanitizer(sanitizeString),
   body('callsign')
     .optional()
     .isString()
     .isLength({ min: 3, max: 10 })
-    .matches(/^[A-Z0-9/]+$/)
     .customSanitizer(val => val.toUpperCase()),
   body('email')
     .optional()

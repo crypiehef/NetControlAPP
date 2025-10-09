@@ -18,16 +18,16 @@ const {
   validateReportQuery 
 } = require('../middleware/validation');
 
-// All routes require auth and admin role
-router.use(auth, admin);
+// All routes require auth and admin role with rate limiting
+router.use(apiLimiter, auth, admin);
 
-router.get('/', apiLimiter, getAllUsers);
-router.post('/', apiLimiter, validateUpdateUser, createUser);
-router.post('/reports/generate', apiLimiter, validateReportQuery, generateReport);
-router.put('/:id', apiLimiter, validateMongoId, validateUpdateUser, updateUser);
-router.delete('/:id', apiLimiter, validateMongoId, deleteUser);
-router.put('/:id/reset-password', apiLimiter, validateMongoId, resetPassword);
-router.put('/:id/role', apiLimiter, validateMongoId, updateUserRole);
+router.get('/', getAllUsers);
+router.post('/', validateUpdateUser, createUser);
+router.post('/reports/generate', validateReportQuery, generateReport);
+router.put('/:id', validateMongoId, validateUpdateUser, updateUser);
+router.delete('/:id', validateMongoId, deleteUser);
+router.put('/:id/reset-password', validateMongoId, resetPassword);
+router.put('/:id/role', validateMongoId, updateUserRole);
 
 module.exports = router;
 

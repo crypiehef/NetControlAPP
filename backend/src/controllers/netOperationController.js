@@ -89,13 +89,19 @@ exports.updateNetOperation = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this net operation' });
     }
 
-    // Only allow specific fields to be updated
+    // Only allow specific fields to be updated with sanitization
     const allowedUpdates = ['name', 'description', 'frequency', 'notes'];
     const updates = {};
     
+    // Sanitize function
+    const sanitizeString = (str) => {
+      if (typeof str !== 'string') return str;
+      return str.replace(/[<>\"'%;()&+]/g, '').trim();
+    };
+    
     Object.keys(req.body).forEach(key => {
       if (allowedUpdates.includes(key)) {
-        updates[key] = req.body[key];
+        updates[key] = sanitizeString(req.body[key]);
       }
     });
 
