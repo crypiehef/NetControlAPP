@@ -89,9 +89,23 @@ exports.updateNetOperation = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this net operation' });
     }
 
+    // Only allow specific fields to be updated
+    const allowedFields = ['netName', 'frequency', 'notes', 'status'];
+    const update = {};
+    for (const key of allowedFields) {
+      if (req.body.hasOwnProperty(key)) {
+        update[key] = req.body[key];
+      }
+    }
+    // Detect update operators injection
+    for (const key in req.body) {
+      if (key.startsWith('$')) {
+        return res.status(400).json({ error: 'Update operators are not allowed' });
+      }
+    }
     const updatedNetOperation = await NetOperation.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      update,
       { new: true, runValidators: true }
     );
 
