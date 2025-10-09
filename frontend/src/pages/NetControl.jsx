@@ -7,7 +7,8 @@ import {
   getNetOperations, 
   addCheckIn, 
   completeNetOperation,
-  deleteCheckIn 
+  deleteCheckIn,
+  updateCheckInNotes
 } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -20,6 +21,8 @@ const NetControl = () => {
     notes: ''
   });
   const [showStartForm, setShowStartForm] = useState(true);
+  const [editingCheckIn, setEditingCheckIn] = useState(null);
+  const [editCheckInNotesText, setEditCheckInNotesText] = useState('');
 
   useEffect(() => {
     loadActiveNet();
@@ -85,6 +88,28 @@ const NetControl = () => {
     } catch (error) {
       toast.error('Failed to complete net');
     }
+  };
+
+  const handleEditCheckInNotes = (checkIn) => {
+    setEditingCheckIn(checkIn._id);
+    setEditCheckInNotesText(checkIn.notes || '');
+  };
+
+  const handleSaveCheckInNotes = async (checkInId) => {
+    try {
+      const updatedNet = await updateCheckInNotes(activeNet._id, checkInId, editCheckInNotesText);
+      setActiveNet(updatedNet);
+      setEditingCheckIn(null);
+      setEditCheckInNotesText('');
+      toast.success('Check-in notes updated!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update check-in notes');
+    }
+  };
+
+  const handleCancelEditCheckInNotes = () => {
+    setEditingCheckIn(null);
+    setEditCheckInNotesText('');
   };
 
   return (
@@ -186,14 +211,52 @@ const NetControl = () => {
                           <td>{checkIn.license_class || '-'}</td>
                           <td>{checkIn.location || '-'}</td>
                           <td>{new Date(checkIn.timestamp).toLocaleTimeString()}</td>
-                          <td>{checkIn.notes || '-'}</td>
                           <td>
-                            <button 
-                              onClick={() => handleDeleteCheckIn(checkIn._id)}
-                              className="btn btn-small btn-danger"
-                            >
-                              Remove
-                            </button>
+                            {editingCheckIn === checkIn._id ? (
+                              <div>
+                                <textarea
+                                  value={editCheckInNotesText}
+                                  onChange={(e) => setEditCheckInNotesText(e.target.value)}
+                                  className="form-control"
+                                  rows="2"
+                                  placeholder="Add notes..."
+                                  style={{ minWidth: '200px', marginBottom: '5px' }}
+                                />
+                                <div style={{ display: 'flex', gap: '5px' }}>
+                                  <button
+                                    onClick={() => handleSaveCheckInNotes(checkIn._id)}
+                                    className="btn btn-small btn-primary"
+                                  >
+                                    💾 Save
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEditCheckInNotes}
+                                    className="btn btn-small btn-secondary"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              checkIn.notes || '-'
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                              <button
+                                onClick={() => handleEditCheckInNotes(checkIn)}
+                                className="btn btn-small btn-secondary"
+                                title="Edit Notes"
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteCheckIn(checkIn._id)}
+                                className="btn btn-small btn-danger"
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
