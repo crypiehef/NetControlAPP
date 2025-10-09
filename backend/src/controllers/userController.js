@@ -215,6 +215,8 @@ exports.generateReport = async (req, res) => {
   try {
     const { operatorId, startDate, endDate } = req.body;
 
+    console.log('Report request received:', { operatorId, startDate, endDate });
+
     // Build query
     let query = {};
 
@@ -223,24 +225,50 @@ exports.generateReport = async (req, res) => {
       query.operatorId = operatorId;
     }
 
-    // Filter by date range
-    if (startDate || endDate) {
-      query.startTime = {};
-      if (startDate) {
-        query.startTime.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        // Add one day to include the end date fully
-        const endDateTime = new Date(endDate);
-        endDateTime.setHours(23, 59, 59, 999);
-        query.startTime.$lte = endDateTime;
-      }
+    // Filter by date range - if only one date is provided, use it for both start and end
+    if (startDate && !endDate) {
+      // Single date - get all operations on this day (use UTC)
+      const dayStart = new Date(startDate);
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const dayEnd = new Date(startDate);
+      dayEnd.setUTCHours(23, 59, 59, 999);
+      query.startTime = { $gte: dayStart, $lte: dayEnd };
+    } else if (!startDate && endDate) {
+      // End date only - all operations up to this date
+      const dayEnd = new Date(endDate);
+      dayEnd.setUTCHours(23, 59, 59, 999);
+      query.startTime = { $lte: dayEnd };
+    } else if (startDate && endDate) {
+      // Date range (use UTC)
+      const rangeStart = new Date(startDate);
+      rangeStart.setUTCHours(0, 0, 0, 0);
+      const rangeEnd = new Date(endDate);
+      rangeEnd.setUTCHours(23, 59, 59, 999);
+      query.startTime = { $gte: rangeStart, $lte: rangeEnd };
     }
+
+    console.log('Report Query with dates:', {
+      ...query,
+      startTime: query.startTime ? {
+        gte: query.startTime.$gte,
+        lte: query.startTime.$lte
+      } : undefined
+    });
 
     // Fetch operations with populated operator data
     const operations = await NetOperation.find(query)
       .populate('operatorId', 'username callsign')
       .sort({ startTime: -1 });
+
+    console.log(`Found ${operations.length} operations for report`);
+    if (operations.length > 0) {
+      console.log('Sample operation:', {
+        id: operations[0]._id,
+        operator: operations[0].operatorCallsign,
+        startTime: operations[0].startTime,
+        status: operations[0].status
+      });
+    }
 
     if (operations.length === 0) {
       return res.status(404).json({ error: 'No operations found matching the criteria' });
@@ -277,6 +305,7 @@ exports.generateReport = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=net-operations-report-${Date.now()}.pdf`);
     res.send(pdfBuffer);
   } catch (error) {
+    console.error('Report generation error:', error);
     res.status(500).json({ error: error.message });
   }
 };

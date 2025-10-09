@@ -5,34 +5,50 @@ const path = require('path');
 class ReportService {
   async generateOperationsReport(operations, filters, logoPath = null) {
     return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
+      const chunks = [];
+
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (err) => {
+        console.error('PDF generation error:', err);
+        reject(err);
+      });
+
       try {
-        const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
-        const chunks = [];
 
-        doc.on('data', chunk => chunks.push(chunk));
-        doc.on('end', () => resolve(Buffer.concat(chunks)));
-        doc.on('error', reject);
-
-        // Add logo if available
+        // Add logo if available (only if it's a supported format)
         if (logoPath && fs.existsSync(logoPath)) {
-          doc.image(logoPath, 50, 45, { width: 100 });
-          doc.moveDown(3);
+          try {
+            // PDFKit only supports JPEG, PNG - not WebP or SVG
+            const ext = path.extname(logoPath).toLowerCase();
+            if (ext === '.jpg' || ext === '.jpeg' || ext === '.png') {
+              doc.image(logoPath, 50, 45, { width: 100 });
+              doc.moveDown(3);
+            } else {
+              console.log(`Logo format ${ext} not supported in PDF, skipping`);
+              doc.moveDown(1);
+            }
+          } catch (imgError) {
+            console.log('Error loading logo for PDF, skipping:', imgError.message);
+            doc.moveDown(1);
+          }
         } else {
           doc.moveDown(1);
         }
 
         // Title
-        doc.fontSize(20).font('Helvetica-Bold')
+        doc.fontSize(20).fillColor('#000000')
           .text('Net Operations Report', { align: 'center' });
         
         doc.moveDown(0.5);
-        doc.fontSize(10).font('Helvetica')
+        doc.fontSize(10)
           .text(`Generated: ${new Date().toLocaleString()}`, { align: 'center' });
 
         // Filters section
         doc.moveDown(1);
-        doc.fontSize(12).font('Helvetica-Bold').text('Report Filters:');
-        doc.fontSize(10).font('Helvetica');
+        doc.fontSize(12).text('Report Filters:');
+        doc.fontSize(10);
         
         if (filters.operator && filters.operator !== 'all') {
           doc.text(`Operator: ${filters.operatorCallsign}`);
@@ -48,8 +64,8 @@ class ReportService {
 
         // Summary statistics
         doc.moveDown(1);
-        doc.fontSize(12).font('Helvetica-Bold').text('Summary Statistics:');
-        doc.fontSize(10).font('Helvetica');
+        doc.fontSize(12).text('Summary Statistics:');
+        doc.fontSize(10);
         
         const totalCheckIns = operations.reduce((sum, op) => sum + op.checkIns.length, 0);
         const activeOps = operations.filter(op => op.status === 'active').length;
@@ -63,7 +79,7 @@ class ReportService {
 
         // Operations list
         doc.moveDown(1.5);
-        doc.fontSize(14).font('Helvetica-Bold').text('Operations Details:');
+        doc.fontSize(14).text('Operations Details:');
         doc.moveDown(0.5);
 
         operations.forEach((op, index) => {
@@ -72,12 +88,10 @@ class ReportService {
             doc.addPage();
           }
 
-          doc.fontSize(11).font('Helvetica-Bold')
-            .text(`${index + 1}. ${op.netName}`, { continued: true })
-            .font('Helvetica')
-            .text(` - ${op.status.toUpperCase()}`, { align: 'left' });
+          doc.fontSize(11)
+            .text(`${index + 1}. ${op.netName} - ${op.status.toUpperCase()}`);
 
-          doc.fontSize(9).font('Helvetica');
+          doc.fontSize(9);
           doc.text(`   Operator: ${op.operatorCallsign}`);
           doc.text(`   Start: ${new Date(op.startTime).toLocaleString()}`);
           if (op.endTime) {
@@ -90,9 +104,8 @@ class ReportService {
 
           // List check-ins if any
           if (op.checkIns.length > 0) {
-            doc.fontSize(8).font('Helvetica-Bold');
+            doc.fontSize(8);
             doc.text(`   Check-in List:`, { underline: true });
-            doc.font('Helvetica');
             
             op.checkIns.forEach((checkIn, idx) => {
               const checkInText = `     ${idx + 1}. ${checkIn.callsign} - ${checkIn.name}`;
@@ -115,7 +128,7 @@ class ReportService {
         const pageCount = doc.bufferedPageRange().count;
         for (let i = 0; i < pageCount; i++) {
           doc.switchToPage(i);
-          doc.fontSize(8).font('Helvetica')
+          doc.fontSize(8)
             .text(
               `Page ${i + 1} of ${pageCount}`,
               50,
@@ -126,6 +139,8 @@ class ReportService {
 
         doc.end();
       } catch (error) {
+        console.error('Error in PDF generation:', error);
+        doc.end();
         reject(error);
       }
     });

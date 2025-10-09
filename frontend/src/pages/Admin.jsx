@@ -175,7 +175,22 @@ const Admin = () => {
 
     setLoading(true);
     try {
-      const pdfBlob = await generateOperationsReport(reportFilters);
+      // Build filters object - only include dates if they're filled in
+      const filters = {
+        operatorId: reportFilters.operatorId
+      };
+      
+      if (reportFilters.startDate) {
+        filters.startDate = reportFilters.startDate;
+      }
+      
+      if (reportFilters.endDate) {
+        filters.endDate = reportFilters.endDate;
+      }
+
+      console.log('Sending report filters:', filters);
+
+      const pdfBlob = await generateOperationsReport(filters);
       const url = window.URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -225,7 +240,7 @@ const Admin = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="reportStartDate">Start Date</label>
+                <label htmlFor="reportStartDate">Start Date (Optional)</label>
                 <input
                   type="date"
                   id="reportStartDate"
@@ -233,10 +248,13 @@ const Admin = () => {
                   onChange={(e) => setReportFilters({ ...reportFilters, startDate: e.target.value })}
                   className="form-control"
                 />
+                <small style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                  Leave blank for all dates
+                </small>
               </div>
 
               <div className="form-group">
-                <label htmlFor="reportEndDate">End Date</label>
+                <label htmlFor="reportEndDate">End Date (Optional)</label>
                 <input
                   type="date"
                   id="reportEndDate"
@@ -244,12 +262,25 @@ const Admin = () => {
                   onChange={(e) => setReportFilters({ ...reportFilters, endDate: e.target.value })}
                   className="form-control"
                 />
+                <small style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                  Leave blank for all dates
+                </small>
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Generating Report...' : '📄 Generate PDF Report'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Generating Report...' : '📄 Generate PDF Report'}
+              </button>
+              <button 
+                type="button"
+                onClick={() => setReportFilters({ operatorId: 'all', startDate: '', endDate: '' })}
+                className="btn btn-secondary"
+                disabled={loading}
+              >
+                🔄 Clear Filters
+              </button>
+            </div>
           </form>
         </div>
 
