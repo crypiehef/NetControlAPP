@@ -1,7 +1,6 @@
 
 <img width="545" height="153" alt="bmc-button" src="https://github.com/user-attachments/assets/ca0f20cd-7b6b-46bd-958e-86ed9ed95535" /> https://buymeacoffee.com/hamradiohef
-
-src="https://github.com/user-attachments/assets/920d1762-9146-4252-b23a-a084a6922531" />
+<img width="1403" height="819" alt="Screenshot 2025-10-07 at 12 52 05 PM" src="https://github.com/user-attachments/assets/7183b52c-b24f-4813-99b1-13e4a3ac3aa2" />
 <img width="1213" height="874" alt="Screenshot 2025-10-08 at 9 02 51 PM" src="https://github.com/user-attachments/assets/dc598bf3-7da1-4c3e-beed-bbd9abd89e7d" />
 <img width="1272" height="842" alt="Screenshot 2025-10-08 at 9 03 16 PM" src="https://github.com/user-attachments/assets/df75d9a4-c958-4339-9c89-8f55e2742cc9" />
 <img width="1245" height="1027" alt="Screenshot 2025-10-08 at 9 03 40 PM" src="https://github.com/user-attachments/assets/ef239b82-fc90-4c21-b818-20b474d8e251" />
