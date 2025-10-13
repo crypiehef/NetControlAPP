@@ -1,6 +1,6 @@
 {
   "name": "net-control-backend",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "Backend for Net Control by K4HEF",
   "main": "src/server.js",
   "scripts": {

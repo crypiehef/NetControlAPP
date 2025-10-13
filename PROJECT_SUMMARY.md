@@ -1,4 +1,4 @@
-# Net Control by K4HEF - Project Summary
+# Net Control by K4HEF - Project Summary (v2.2.0)
 
 ## Overview
 A complete, production-ready web application for Ham Radio Net Control Operators built for the York County Amateur Radio Society.
@@ -13,6 +13,12 @@ A complete, production-ready web application for Ham Radio Net Control Operators
 - ✅ Docker containerization for easy deployment
 
 ### Core Features Implemented
+
+#### New in v2.2.0
+- Admin "Check for Updates" feature with GitHub integration
+- Real-time progress via SSE during updates
+- Version info panel on Admin page
+- Backend endpoints: `/api/updates/check`, `/api/updates/perform`, `/api/updates/version`
 
 #### 1. Net Control Operation Page
 - Start/stop net operations
