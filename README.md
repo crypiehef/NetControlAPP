@@ -704,6 +704,7 @@ For issues, questions, or contributions, please contact K4HEF or open an issue i
 - **York County Amateur Radio Society** - Sponsoring organization
 - **QRZ.com** - Callsign lookup API
 - **Dom The Dorito** (Discord) - Feature suggestions
+- **K4HCK** (QRZ Forum) - Feature suggestion
 - **The Ham Radio Community** - Continued support
 
 ---
