@@ -8,7 +8,8 @@ import {
   addCheckIn, 
   completeNetOperation,
   deleteCheckIn,
-  updateCheckInNotes
+  updateCheckInNotes,
+  updateCheckInCommented
 } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -112,6 +113,16 @@ const NetControl = () => {
     setEditCheckInNotesText('');
   };
 
+  const handleCheckInCommentedChange = async (checkInId, commented) => {
+    try {
+      const updatedNet = await updateCheckInCommented(activeNet._id, checkInId, commented);
+      setActiveNet(updatedNet);
+      toast.success(commented ? 'Comment status marked as complete!' : 'Comment status reset');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update comment status');
+    }
+  };
+
   return (
     <div>
       <Navbar />
@@ -199,6 +210,7 @@ const NetControl = () => {
                         <th>Location</th>
                         <th>Time</th>
                         <th>Comments</th>
+                        <th>Commented?</th>
                         <th>Notes</th>
                         <th>Actions</th>
                       </tr>
@@ -217,6 +229,21 @@ const NetControl = () => {
                               <span style={{ color: 'var(--success-color)', fontWeight: '600' }}>✓ Yes</span>
                             ) : (
                               <span style={{ color: 'var(--text-secondary)' }}>Not staying</span>
+                            )}
+                          </td>
+                          <td>
+                            {checkIn.stayingForComments ? (
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={checkIn.commented || false}
+                                  onChange={(e) => handleCheckInCommentedChange(checkIn._id, e.target.checked)}
+                                  style={{ width: 'auto', cursor: 'pointer' }}
+                                />
+                                <span style={{ fontSize: '0.9em' }}>Done</span>
+                              </label>
+                            ) : (
+                              <span style={{ color: 'var(--text-secondary)' }}>-</span>
                             )}
                           </td>
                           <td>

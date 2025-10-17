@@ -75,6 +75,11 @@ export const updateCheckInNotes = async (netOpId, checkInId, notes) => {
   return response.data;
 };
 
+export const updateCheckInCommented = async (netOpId, checkInId, commented) => {
+  const response = await axios.put(`${API_URL}/net-operations/${netOpId}/checkins/${checkInId}/commented`, { commented });
+  return response.data;
+};
+
 // Settings
 export const getSettings = async () => {
   const response = await axios.get(`${API_URL}/settings`);

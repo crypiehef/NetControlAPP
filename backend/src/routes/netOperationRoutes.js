@@ -14,7 +14,8 @@ const {
   scheduleNetOperation,
   startScheduledNet,
   updateNetNotes,
-  updateCheckInNotes
+  updateCheckInNotes,
+  updateCheckInCommented
 } = require('../controllers/netOperationController');
 const auth = require('../middleware/auth');
 const { apiLimiter } = require('../middleware/rateLimiter');
@@ -35,6 +36,7 @@ router.put('/:id/complete', apiLimiter, auth, validateMongoId, completeNetOperat
 router.put('/:id/start', apiLimiter, auth, validateMongoId, startScheduledNet);
 router.put('/:id/notes', apiLimiter, auth, validateMongoId, updateNetNotes);
 router.put('/:id/checkins/:checkinId/notes', apiLimiter, auth, validateMongoId, updateCheckInNotes);
+router.put('/:id/checkins/:checkinId/commented', apiLimiter, auth, validateMongoId, updateCheckInCommented);
 router.post('/:id/checkins', apiLimiter, auth, validateMongoId, validateCheckIn, addCheckIn);
 router.delete('/:id/checkins/:checkinId', apiLimiter, auth, validateMongoId, deleteCheckIn);
 router.delete('/:id', apiLimiter, auth, validateMongoId, deleteNetOperation);

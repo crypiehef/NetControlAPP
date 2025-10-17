@@ -188,6 +188,7 @@ exports.addCheckIn = async (req, res) => {
       location: location || '',
       license_class: license_class || '',
       stayingForComments: stayingForComments || false,
+      commented: false,
       notes,
       timestamp: new Date()
     });
@@ -512,6 +513,39 @@ exports.updateCheckInNotes = async (req, res) => {
     }
 
     checkIn.notes = notes || '';
+    await netOperation.save();
+
+    res.json(netOperation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Update check-in commented status
+// @route   PUT /api/net-operations/:id/checkins/:checkinId/commented
+// @access  Private
+exports.updateCheckInCommented = async (req, res) => {
+  try {
+    const { commented } = req.body;
+    const netOperation = await NetOperation.findById(req.params.id);
+
+    if (!netOperation) {
+      return res.status(404).json({ error: 'Net operation not found' });
+    }
+
+    // Check if user is the operator or admin
+    if (netOperation.operatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to edit this net operation' });
+    }
+
+    // Find and update the check-in
+    const checkIn = netOperation.checkIns.id(req.params.checkinId);
+    
+    if (!checkIn) {
+      return res.status(404).json({ error: 'Check-in not found' });
+    }
+
+    checkIn.commented = commented || false;
     await netOperation.save();
 
     res.json(netOperation);

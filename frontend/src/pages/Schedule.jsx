@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
-import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes, updateCheckInNotes } from '../services/api';
+import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes, updateCheckInNotes, updateCheckInCommented } from '../services/api';
 import { toast } from 'react-toastify';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
@@ -183,6 +183,19 @@ const Schedule = () => {
   const handleCancelEditCheckInNotes = () => {
     setEditingCheckIn(null);
     setEditCheckInNotesText('');
+  };
+
+  const handleCheckInCommentedChange = async (operationId, checkInId, commented) => {
+    setLoading(true);
+    try {
+      await updateCheckInCommented(operationId, checkInId, commented);
+      toast.success(commented ? 'Comment status marked as complete!' : 'Comment status reset');
+      loadOperations();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update comment status');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTileClassName = ({ date, view }) => {
@@ -407,6 +420,7 @@ const Schedule = () => {
                                 <th>Name</th>
                                 <th>Time</th>
                                 <th>Comments</th>
+                                <th>Commented?</th>
                                 <th>Notes</th>
                                 {op.status === 'completed' && <th>Actions</th>}
                               </tr>
@@ -423,6 +437,21 @@ const Schedule = () => {
                                       <span style={{ color: 'var(--success-color)' }}>✓ Yes</span>
                                     ) : (
                                       <span style={{ color: 'var(--text-secondary)' }}>Not staying</span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {checkIn.stayingForComments ? (
+                                      <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={checkIn.commented || false}
+                                          onChange={(e) => handleCheckInCommentedChange(op._id, checkIn._id, e.target.checked)}
+                                          style={{ width: 'auto', cursor: 'pointer' }}
+                                        />
+                                        <span style={{ fontSize: '0.9em' }}>Done</span>
+                                      </label>
+                                    ) : (
+                                      <span style={{ color: 'var(--text-secondary)' }}>-</span>
                                     )}
                                   </td>
                                   <td>
