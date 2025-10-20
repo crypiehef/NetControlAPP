@@ -188,6 +188,7 @@ The Net Control System implements enterprise-grade security measures to protect 
 - Role-based access control (RBAC)
 - Secure password hashing with bcrypt
 - Session management and token refresh
+- Configurable JWT secret for enhanced security
 
 ### Input Validation & Sanitization
 - All user inputs are validated and sanitized
@@ -217,10 +218,11 @@ The Net Control System implements enterprise-grade security measures to protect 
 
 ### For Administrators
 1. Use strong, unique passwords
-2. Regularly update the application
-3. Monitor system logs for suspicious activity
-4. Implement proper backup procedures
-5. Use HTTPS in production environments
+2. Configure a secure JWT secret (see JWT_SECRET_SETUP.md)
+3. Regularly update the application
+4. Monitor system logs for suspicious activity
+5. Implement proper backup procedures
+6. Use HTTPS in production environments
 
 ### For Users
 1. Choose strong passwords

@@ -139,6 +139,84 @@ environment:
   - NODE_ENV=production
 ```
 
+### JWT Secret Configuration
+
+**⚠️ IMPORTANT:** The JWT (JSON Web Token) secret is crucial for security. Never use the default secret in production!
+
+#### Generating a Secure JWT Secret
+
+Use one of these methods to generate a secure secret:
+
+```bash
+# Method 1: Using Node.js (recommended)
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
+# Method 2: Using OpenSSL
+openssl rand -base64 64
+
+# Method 3: Using Python
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+#### Setting Up JWT Secret
+
+**For Docker Installation:**
+
+1. **Edit the `.env` file** in your project root:
+   ```bash
+   # Generate a secure secret first
+   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+   
+   # Then edit .env file
+   nano .env
+   ```
+
+2. **Add your JWT secret:**
+   ```env
+   JWT_SECRET=your_generated_64_character_random_string_here
+   ```
+
+3. **Restart the application:**
+   ```bash
+   docker-compose down
+   docker-compose up -d
+   ```
+
+**For Manual Installation:**
+
+1. **Set environment variable:**
+   ```bash
+   export JWT_SECRET="your_very_secure_secret_key_here"
+   ```
+
+2. **Or add to your `.env` file** in the backend directory:
+   ```env
+   JWT_SECRET=your_very_secure_secret_key_here
+   ```
+
+#### Security Best Practices
+
+- **Use at least 32 characters** with a mix of letters, numbers, and symbols
+- **Never commit your secret** to version control
+- **Change the secret** if you suspect it's been compromised
+- **After changing the secret**, all users will need to log in again
+
+#### Verifying Configuration
+
+Check that your JWT secret is properly loaded:
+
+```bash
+# Check environment variable in running container
+docker-compose exec backend env | grep JWT_SECRET
+
+# Or test login to verify token generation works
+curl -X POST http://localhost:5001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_username", "password": "your_password"}'
+```
+
+**Note:** Detailed JWT configuration instructions are available in the `JWT_SECRET_SETUP.md` file included with the application.
+
 ---
 
 ## Initial Setup
