@@ -29,6 +29,8 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/net-operations', require('./routes/netOperationRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/updates', require('./routes/updateRoutes'));
+
 
 // Health check
 app.get('/api/health', (req, res) => {
