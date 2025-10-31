@@ -8,7 +8,8 @@
 
 
 
-
+# New Mobile App for iOS, iPadOS, MacOS and VisionOS that syncronizes Net Control Check-In's with the Web App. https://apps.apple.com/us/app/ham-radio-net-control/id6754520301
+  Android version in planning phase.
 
 # Net Control by K4HEF
 
