@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     enum: ['operator', 'admin'],
     default: 'operator'
   },
+  isEnabled: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

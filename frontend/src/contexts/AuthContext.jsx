@@ -49,19 +49,22 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const register = async (username, callsign, email, password) => {
+  const register = async (username, callsign, email, password, recaptchaToken) => {
     const response = await axios.post('/api/auth/register', {
       username,
       callsign,
       email,
-      password
+      password,
+      recaptchaToken
     });
     
-    const { token, ...userData } = response.data;
-    
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setUser(userData);
+    // Only set token and login if user is enabled (first user or admin-created)
+    if (response.data.token && response.data.isEnabled) {
+      const { token, ...userData } = response.data;
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(userData);
+    }
     
     return response.data;
   };

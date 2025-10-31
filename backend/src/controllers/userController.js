@@ -35,13 +35,14 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user (admin-created users are enabled by default)
     const user = await User.create({
       username,
       callsign: callsign.toUpperCase(),
       email,
       password,
-      role: role || 'operator'
+      role: role || 'operator',
+      isEnabled: true // Admin-created users are enabled immediately
     });
 
     // Create default settings for user
@@ -148,6 +149,44 @@ exports.updateUserRole = async (req, res) => {
       callsign: user.callsign,
       email: user.email,
       role: user.role
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Enable/disable user account
+// @route   PUT /api/users/:id/enable
+// @access  Private/Admin
+exports.toggleUserEnabled = async (req, res) => {
+  try {
+    const { enabled } = req.body;
+
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled must be a boolean value' });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent disabling yourself
+    if (user._id.toString() === req.user._id.toString() && !enabled) {
+      return res.status(400).json({ error: 'You cannot disable your own account' });
+    }
+
+    user.isEnabled = enabled;
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      callsign: user.callsign,
+      email: user.email,
+      role: user.role,
+      isEnabled: user.isEnabled
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

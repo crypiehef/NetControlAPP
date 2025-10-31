@@ -138,6 +138,11 @@ export const updateUser = async (userId, userData) => {
   return response.data;
 };
 
+export const toggleUserEnabled = async (userId, enabled) => {
+  const response = await axios.put(`${API_URL}/users/${userId}/enable`, { enabled });
+  return response.data;
+};
+
 export const generateOperationsReport = async (filters) => {
   const response = await axios.post(`${API_URL}/users/reports/generate`, filters, {
     responseType: 'blob'

@@ -9,6 +9,7 @@ import {
   resetUserPassword,
   updateUserRole,
   updateUser,
+  toggleUserEnabled,
   generateOperationsReport
 } from '../services/api';
 import { toast } from 'react-toastify';
@@ -137,6 +138,26 @@ const Admin = () => {
       loadUsers();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to update role');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleEnabled = async (userId, currentStatus) => {
+    const newStatus = !currentStatus;
+    const action = newStatus ? 'enable' : 'disable';
+    
+    if (!window.confirm(`${action === 'enable' ? 'Enable' : 'Disable'} this user account?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await toggleUserEnabled(userId, newStatus);
+      toast.success(`User account ${action}d successfully!`);
+      loadUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.error || `Failed to ${action} user`);
     } finally {
       setLoading(false);
     }
@@ -385,6 +406,7 @@ const Admin = () => {
                     <th>Callsign</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Status</th>
                     <th>Created</th>
                     <th>Actions</th>
                   </tr>
@@ -398,6 +420,11 @@ const Admin = () => {
                       <td>
                         <span className={`role-badge ${u.role}`}>
                           {u.role.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${u.isEnabled ? 'enabled' : 'pending'}`}>
+                          {u.isEnabled ? '✓ Enabled' : '⏳ Pending'}
                         </span>
                       </td>
                       <td>{new Date(u.createdAt).toLocaleDateString()}</td>
@@ -429,6 +456,14 @@ const Admin = () => {
                             title={`Change to ${u.role === 'admin' ? 'Operator' : 'Admin'}`}
                           >
                             {u.role === 'admin' ? '👤 Make Operator' : '⭐ Make Admin'}
+                          </button>
+                          <button
+                            onClick={() => handleToggleEnabled(u._id, u.isEnabled)}
+                            className={`btn btn-small ${u.isEnabled ? 'btn-secondary' : 'btn-success'}`}
+                            disabled={loading || u._id === user._id}
+                            title={u.isEnabled ? 'Disable User Account' : 'Enable User Account'}
+                          >
+                            {u.isEnabled ? '🔒 Disable' : '✅ Enable'}
                           </button>
                           <button
                             onClick={() => handleDeleteUser(u._id, u.username)}
@@ -607,6 +642,23 @@ const Admin = () => {
         .role-badge.operator {
           background: #4a90e2;
           color: #fff;
+        }
+
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 0.85em;
+          font-weight: 600;
+        }
+
+        .status-badge.enabled {
+          background: #28a745;
+          color: #fff;
+        }
+
+        .status-badge.pending {
+          background: #ffc107;
+          color: #000;
         }
 
         .action-buttons {

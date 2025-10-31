@@ -624,12 +624,22 @@ docker-compose up -d --build frontend
 - Bcrypt password hashing
 - Role-based access control (RBAC)
 - Protected API endpoints
+- **Admin authorization** for new user accounts (v2.2.4)
+- **Account enable/disable** functionality for admin control
+- Disabled accounts cannot login
+
+✅ **Bot Protection**:
+- **Google reCAPTCHA v3** integration on registration form (v2.2.4)
+- Invisible verification (no checkbox required)
+- Backend token verification
+- Configurable via environment variables
 
 ✅ **Input Validation**:
 - File upload validation (type, size, name)
 - Form input sanitization
 - MongoDB injection prevention
 - CORS configuration
+- reCAPTCHA token validation
 
 ## License
 
@@ -641,7 +651,41 @@ For issues, questions, or contributions, please contact K4HEF or open an issue i
 
 ## Version History
 
-### v2.1 - Advanced Reporting & Enhanced Operations Management (Current)
+### v2.2.4 - Admin Authorization & reCAPTCHA Protection (Current)
+**Security & User Management Enhancement**
+
+**Admin Authorization System:**
+- ✅ New user accounts require admin approval before login
+- ✅ First user is automatically enabled (setup user)
+- ✅ Admin can enable/disable user accounts
+- ✅ Visual status indicators (Enabled/Pending) in admin panel
+- ✅ Secure login check prevents disabled accounts from accessing system
+
+**reCAPTCHA Integration:**
+- ✅ Google reCAPTCHA v3 protection on registration form
+- ✅ Invisible bot protection (no checkbox required)
+- ✅ Backend verification service
+- ✅ Configurable via environment variables
+- ✅ Development mode bypass for testing
+
+**Enhanced User Management:**
+- ✅ Status column in admin panel showing account state
+- ✅ Enable/Disable buttons for quick account management
+- ✅ Color-coded status badges (Green = Enabled, Yellow = Pending)
+- ✅ Improved user registration flow with clear messaging
+- ✅ Admin cannot disable their own account (security)
+
+**Documentation:**
+- ✅ Complete reCAPTCHA setup guide (RECAPTCHA_SETUP.md)
+- ✅ Environment variable configuration documentation
+- ✅ Troubleshooting guide for common issues
+
+**Bug Fixes:**
+- ✅ Fixed registration flow for pending users
+- ✅ Improved error messages for disabled accounts
+- ✅ Enhanced admin panel user management UI
+
+### v2.1 - Advanced Reporting & Enhanced Operations Management
 **Major Release - Enterprise Features**
 
 **Advanced Reporting System:**

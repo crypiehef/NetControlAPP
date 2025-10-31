@@ -7,6 +7,7 @@ const {
   resetPassword,
   updateUserRole,
   updateUser,
+  toggleUserEnabled,
   generateReport
 } = require('../controllers/userController');
 const auth = require('../middleware/auth');
@@ -28,6 +29,7 @@ router.put('/:id', validateMongoId, validateUpdateUser, updateUser);
 router.delete('/:id', validateMongoId, deleteUser);
 router.put('/:id/reset-password', validateMongoId, resetPassword);
 router.put('/:id/role', validateMongoId, updateUserRole);
+router.put('/:id/enable', validateMongoId, toggleUserEnabled);
 
 module.exports = router;
 

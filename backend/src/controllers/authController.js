@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Settings = require('../models/Settings');
+const { verifyRecaptcha } = require('../services/recaptchaService');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -14,7 +15,15 @@ const generateToken = (id) => {
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { username, callsign, email, password } = req.body;
+    const { username, callsign, email, password, recaptchaToken } = req.body;
+
+    // Verify reCAPTCHA
+    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+    if (!isRecaptchaValid) {
+      return res.status(400).json({ 
+        error: 'reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.' 
+      });
+    }
 
     // Check if user exists
     const userExists = await User.findOne({ 
@@ -27,17 +36,18 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Check if this is the first user (make them admin)
+    // Check if this is the first user (make them admin and enable them)
     const userCount = await User.countDocuments();
     const isFirstUser = userCount === 0;
 
-    // Create user
+    // Create user (disabled by default unless first user)
     const user = await User.create({
       username,
       callsign: callsign.toUpperCase(),
       email,
       password,
-      role: isFirstUser ? 'admin' : 'operator'
+      role: isFirstUser ? 'admin' : 'operator',
+      isEnabled: isFirstUser // First user is automatically enabled
     });
 
     // Create default settings for user
@@ -46,14 +56,29 @@ exports.register = async (req, res) => {
     });
 
     if (user) {
-      res.status(201).json({
-        _id: user._id,
-        username: user.username,
-        callsign: user.callsign,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
-      });
+      if (isFirstUser) {
+        // First user gets immediate access
+        res.status(201).json({
+          _id: user._id,
+          username: user.username,
+          callsign: user.callsign,
+          email: user.email,
+          role: user.role,
+          isEnabled: user.isEnabled,
+          token: generateToken(user._id),
+        });
+      } else {
+        // Other users need admin approval
+        res.status(201).json({
+          message: 'Registration successful! Your account is pending admin approval. You will be able to login once an admin enables your account.',
+          _id: user._id,
+          username: user.username,
+          callsign: user.callsign,
+          email: user.email,
+          role: user.role,
+          isEnabled: user.isEnabled,
+        });
+      }
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -87,12 +112,20 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ username: { $eq: sanitizedUsername } });
 
     if (user && (await user.comparePassword(password))) {
+      // Check if user account is enabled
+      if (!user.isEnabled) {
+        return res.status(403).json({ 
+          error: 'Your account is pending admin approval. Please wait for an admin to enable your account before logging in.' 
+        });
+      }
+
       res.json({
         _id: user._id,
         username: user.username,
         callsign: user.callsign,
         email: user.email,
         role: user.role,
+        isEnabled: user.isEnabled,
         token: generateToken(user._id),
       });
     } else {
