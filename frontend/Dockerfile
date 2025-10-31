@@ -2,6 +2,10 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Accept build arguments for environment variables
+ARG VITE_RECAPTCHA_SITE_KEY
+ENV VITE_RECAPTCHA_SITE_KEY=$VITE_RECAPTCHA_SITE_KEY
+
 # Copy package files
 COPY package*.json ./
 

@@ -11,7 +11,15 @@ const path = require('path');
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
-    res.json(users);
+    
+    // For backward compatibility: ensure isEnabled field exists in response
+    // If field doesn't exist (old users), default to true
+    const usersWithDefaults = users.map(user => ({
+      ...user.toObject(),
+      isEnabled: user.isEnabled !== undefined ? user.isEnabled : true
+    }));
+    
+    res.json(usersWithDefaults);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

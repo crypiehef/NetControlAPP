@@ -105,20 +105,44 @@ const Admin = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 6) {
+    e.stopPropagation();
+    
+    // Validate password
+    if (!newPassword || newPassword.trim().length < 6) {
       toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!selectedUser || !selectedUser._id) {
+      toast.error('No user selected');
       return;
     }
 
     setLoading(true);
     try {
-      await resetUserPassword(selectedUser._id, newPassword);
-      toast.success(`Password reset for ${selectedUser.username}!`);
+      await resetUserPassword(selectedUser._id, newPassword.trim());
+      const isOwnPassword = selectedUser._id === user._id;
+      toast.success(isOwnPassword 
+        ? 'Password changed successfully! Please login again with your new password.'
+        : `Password reset successfully for ${selectedUser.username}!`
+      );
       setShowResetModal(false);
       setSelectedUser(null);
       setNewPassword('');
+      
+      // If user changed their own password, show option to logout
+      if (isOwnPassword) {
+        // Optionally auto-logout or show a message
+        setTimeout(() => {
+          if (window.confirm('Your password has been changed. Would you like to logout now to login with your new password?')) {
+            // This will be handled by the logout in Navbar or AuthContext
+            window.location.href = '/login';
+          }
+        }, 1000);
+      }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to reset password');
+      console.error('Reset password error:', error);
+      toast.error(error.response?.data?.error || error.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -441,13 +465,14 @@ const Admin = () => {
                           <button
                             onClick={() => {
                               setSelectedUser(u);
+                              setNewPassword(''); // Clear password field when opening modal
                               setShowResetModal(true);
                             }}
                             className="btn btn-small btn-secondary"
-                            disabled={loading || u._id === user._id}
-                            title="Reset Password"
+                            disabled={loading}
+                            title={u._id === user._id ? "Change Your Password" : "Reset Password"}
                           >
-                            Reset Password
+                            {u._id === user._id ? "Change Password" : "Reset Password"}
                           </button>
                           <button
                             onClick={() => handleToggleRole(u._id, u.role)}
@@ -487,7 +512,12 @@ const Admin = () => {
         {showResetModal && selectedUser && (
           <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>Reset Password for {selectedUser.username}</h2>
+              <h2>{selectedUser._id === user._id ? 'Change Your Password' : `Reset Password for ${selectedUser.username}`}</h2>
+              {selectedUser._id === user._id && (
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                  You are changing your own password. After changing, you will need to login again with the new password.
+                </p>
+              )}
               <form onSubmit={handleResetPassword}>
                 <div className="form-group">
                   <label htmlFor="newPassword">New Password</label>
@@ -497,15 +527,26 @@ const Admin = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    minLength="6"
+                    minLength={6}
                     className="form-control"
-                    placeholder="Minimum 6 characters"
+                    placeholder="Enter new password (minimum 6 characters)"
                     autoFocus
+                    disabled={loading}
                   />
+                  <small style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
+                    Password must be at least 6 characters long
+                  </small>
                 </div>
                 <div className="modal-actions">
-                  <button type="submit" className="btn btn-primary" disabled={loading}>
-                    {loading ? 'Resetting...' : 'Reset Password'}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={loading || !newPassword || newPassword.trim().length < 6}
+                  >
+                    {loading 
+                      ? (selectedUser._id === user._id ? 'Changing...' : 'Resetting...') 
+                      : (selectedUser._id === user._id ? 'Change Password' : 'Reset Password')
+                    }
                   </button>
                   <button 
                     type="button" 
@@ -515,6 +556,7 @@ const Admin = () => {
                       setNewPassword('');
                     }} 
                     className="btn btn-secondary"
+                    disabled={loading}
                   >
                     Cancel
                   </button>

@@ -17,16 +17,17 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Load reCAPTCHA script
+  // Load reCAPTCHA script only if configured
   useEffect(() => {
     const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
     
+    // If reCAPTCHA not configured, mark as loaded (no blocking)
     if (!recaptchaSiteKey) {
-      console.warn('RECAPTCHA_SITE_KEY not set - reCAPTCHA will be skipped');
       setRecaptchaLoaded(true);
       return;
     }
 
+    // Only load reCAPTCHA script if site key is configured
     const script = document.createElement('script');
     script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`;
     script.async = true;
@@ -37,6 +38,11 @@ const Register = () => {
           setRecaptchaLoaded(true);
         });
       }
+    };
+    script.onerror = () => {
+      console.error('Failed to load reCAPTCHA script');
+      // Allow registration to proceed even if script fails
+      setRecaptchaLoaded(true);
     };
     document.body.appendChild(script);
 
@@ -59,19 +65,24 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Get reCAPTCHA token
+      // Get reCAPTCHA token only if configured
       let recaptchaToken = null;
       const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
       
+      // Only attempt reCAPTCHA if site key is configured
       if (recaptchaSiteKey && window.grecaptcha) {
         try {
           recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, { action: 'register' });
         } catch (recaptchaError) {
           console.error('reCAPTCHA error:', recaptchaError);
+          // If reCAPTCHA is configured but fails, show error
           toast.error('reCAPTCHA verification failed. Please try again.');
           setLoading(false);
           return;
         }
+      } else if (!recaptchaSiteKey) {
+        // reCAPTCHA not configured - registration will proceed without it
+        console.log('reCAPTCHA not configured - proceeding without verification');
       }
 
       const result = await register(
@@ -171,8 +182,8 @@ const Register = () => {
             />
           </div>
 
-          {/* reCAPTCHA badge */}
-          {recaptchaLoaded && import.meta.env.VITE_RECAPTCHA_SITE_KEY && (
+          {/* reCAPTCHA badge - only show if configured */}
+          {import.meta.env.VITE_RECAPTCHA_SITE_KEY && (
             <div className="recaptcha-info" style={{ 
               fontSize: '0.85rem', 
               color: 'var(--text-secondary)', 
@@ -186,7 +197,7 @@ const Register = () => {
             </div>
           )}
 
-          <button type="submit" disabled={loading || !recaptchaLoaded} className="btn btn-primary btn-block">
+          <button type="submit" disabled={loading || (import.meta.env.VITE_RECAPTCHA_SITE_KEY && !recaptchaLoaded)} className="btn btn-primary btn-block">
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>

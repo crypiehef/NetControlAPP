@@ -17,12 +17,14 @@ exports.register = async (req, res) => {
   try {
     const { username, callsign, email, password, recaptchaToken } = req.body;
 
-    // Verify reCAPTCHA
-    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-    if (!isRecaptchaValid) {
-      return res.status(400).json({ 
-        error: 'reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.' 
-      });
+    // Verify reCAPTCHA only if configured
+    if (process.env.RECAPTCHA_SECRET_KEY) {
+      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!isRecaptchaValid) {
+        return res.status(400).json({ 
+          error: 'reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.' 
+        });
+      }
     }
 
     // Check if user exists
@@ -113,7 +115,9 @@ exports.login = async (req, res) => {
 
     if (user && (await user.comparePassword(password))) {
       // Check if user account is enabled
-      if (!user.isEnabled) {
+      // For backward compatibility: if isEnabled field doesn't exist, treat as enabled
+      const isEnabled = user.isEnabled !== undefined ? user.isEnabled : true;
+      if (!isEnabled) {
         return res.status(403).json({ 
           error: 'Your account is pending admin approval. Please wait for an admin to enable your account before logging in.' 
         });
@@ -142,7 +146,15 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
-    res.json(user);
+    
+    // For backward compatibility: ensure isEnabled field exists
+    // If field doesn't exist (old users), default to true
+    const userData = user.toObject();
+    if (userData.isEnabled === undefined) {
+      userData.isEnabled = true;
+    }
+    
+    res.json(userData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

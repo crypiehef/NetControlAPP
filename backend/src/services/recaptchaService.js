@@ -7,13 +7,14 @@ const axios = require('axios');
  */
 const verifyRecaptcha = async (token) => {
   try {
+    // If reCAPTCHA not configured, always return true (skip verification)
     if (!process.env.RECAPTCHA_SECRET_KEY) {
-      console.warn('RECAPTCHA_SECRET_KEY not set - skipping verification');
-      // In development, allow bypassing reCAPTCHA if not configured
-      return process.env.NODE_ENV !== 'production';
+      return true; // Skip verification if not configured
     }
 
+    // If configured but no token provided, fail verification
     if (!token) {
+      console.warn('reCAPTCHA token not provided but secret key is configured');
       return false;
     }
 
