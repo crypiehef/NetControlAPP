@@ -8,7 +8,8 @@
 
 
 
-
+# New Mobile App for iOS, iPadOS, MacOS and VisionOS that syncronizes Net Control Check-In's with the Web App. https://apps.apple.com/us/app/ham-radio-net-control/id6754520301
+  Android version in planning phase.
 
 # Net Control by K4HEF
 
@@ -139,7 +140,7 @@ cp .env.example .env
 ```
 JWT_SECRET=your_very_secure_jwt_secret_key_here
 ```
-Get a secret JWT Token here: https://jwtsecrets.com/#generator
+Get a secret JWT Token here: [https://jwtsecrets.com/#generator](https://github.com/crypiehef/NetControlAPP/wiki/JWT_SECRET_SETUP.md)
 
 4. Start the application:
 ```bash
