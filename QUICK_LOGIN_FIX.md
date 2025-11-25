@@ -68,7 +68,7 @@ const User = require('./src/models/User');
 mongoose.connect(process.env.MONGODB_URI).then(async () => {
   const user = await User.findOne({ username: 'K4HEF' });
   if (user) {
-    user.password = 'Shampoo14281';
+    user.password = 'Password';
     await user.save();
     console.log('Password reset');
   }
