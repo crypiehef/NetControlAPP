@@ -10,7 +10,7 @@
 
 The account has been enabled directly via MongoDB:
 - Username: `K4HEF`
-- Password: `Shampoo14281`
+- Password: `Password`
 - Status: **Enabled**
 - Role: **Admin**
 
