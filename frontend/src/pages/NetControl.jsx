@@ -24,6 +24,7 @@ const NetControl = () => {
   const [showStartForm, setShowStartForm] = useState(true);
   const [editingCheckIn, setEditingCheckIn] = useState(null);
   const [editCheckInNotesText, setEditCheckInNotesText] = useState('');
+  const [sortBySuffix, setSortBySuffix] = useState(false);
 
   useEffect(() => {
     loadActiveNet();
@@ -123,6 +124,51 @@ const NetControl = () => {
     }
   };
 
+  // Extract the suffix letter from a callsign (first letter after numbers/prefix)
+  // Example: K4HEF -> H, N1AA -> A, W1AW -> A
+  const getCallsignSuffix = (callsign) => {
+    if (!callsign) return '';
+    
+    // Find the first letter that appears after any numbers
+    // This handles patterns like K4HEF, N1AA, W1AW, VE3ABC, etc.
+    const match = callsign.match(/[0-9]+([A-Z])/);
+    if (match && match[1]) {
+      return match[1].toUpperCase();
+    }
+    
+    // Fallback: if no number found, find first letter after any prefix letters
+    // This handles edge cases where callsigns might not follow standard format
+    const letterMatch = callsign.match(/^[A-Z0-9]*([A-Z])/);
+    if (letterMatch && letterMatch[1]) {
+      return letterMatch[1].toUpperCase();
+    }
+    
+    return '';
+  };
+
+  // Sort check-ins based on current sort mode
+  const getSortedCheckIns = () => {
+    if (!activeNet?.checkIns) return [];
+    
+    const checkIns = [...activeNet.checkIns];
+    
+    if (sortBySuffix) {
+      return checkIns.sort((a, b) => {
+        const suffixA = getCallsignSuffix(a.callsign);
+        const suffixB = getCallsignSuffix(b.callsign);
+        
+        if (suffixA < suffixB) return -1;
+        if (suffixA > suffixB) return 1;
+        
+        // If suffix letters are the same, sort by full callsign
+        return a.callsign.localeCompare(b.callsign);
+      });
+    }
+    
+    // Default: return in original order (by check-in time)
+    return checkIns;
+  };
+
   return (
     <div>
       <Navbar />
@@ -195,7 +241,18 @@ const NetControl = () => {
             </div>
 
             <div className="checkins-list">
-              <h2>Check-ins ({activeNet?.checkIns.length || 0})</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 style={{ margin: 0 }}>Check-ins ({activeNet?.checkIns.length || 0})</h2>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95em' }}>
+                  <input
+                    type="checkbox"
+                    checked={sortBySuffix}
+                    onChange={(e) => setSortBySuffix(e.target.checked)}
+                    style={{ width: 'auto', cursor: 'pointer' }}
+                  />
+                  <span>Sort by callsign suffix</span>
+                </label>
+              </div>
               {activeNet?.checkIns.length === 0 ? (
                 <p className="no-data">No check-ins yet</p>
               ) : (
@@ -216,7 +273,7 @@ const NetControl = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {activeNet?.checkIns.map((checkIn, index) => (
+                      {getSortedCheckIns().map((checkIn, index) => (
                         <tr key={checkIn._id}>
                           <td>{index + 1}</td>
                           <td className="callsign-cell">{checkIn.callsign}</td>
