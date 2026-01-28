@@ -1,6 +1,6 @@
 {
   "name": "net-control-backend",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Backend for Net Control by K4HEF",
   "main": "src/server.js",
   "scripts": {
@@ -27,6 +27,9 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "overrides": {
+    "lodash": "4.17.23"
   }
 }
 

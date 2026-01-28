@@ -1,6 +1,6 @@
 {
   "name": "net-control-frontend",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Frontend for Net Control by K4HEF",
   "private": true,
   "dependencies": {
