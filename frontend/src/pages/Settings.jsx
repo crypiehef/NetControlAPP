@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 const Settings = () => {
   const { theme, toggleTheme, updateLogo } = useTheme();
   const [qrzApiKey, setQrzApiKey] = useState('');
+  const [showQrzKey, setShowQrzKey] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,6 +33,7 @@ const Settings = () => {
     setLoading(true);
     try {
       await updateSettings({ qrzApiKey });
+      setShowQrzKey(false);
       toast.success('QRZ API key saved!');
     } catch (error) {
       toast.error('Failed to save API key');
@@ -161,15 +163,36 @@ const Settings = () => {
             </div>
             <div className="setting-control">
               <form onSubmit={handleSaveApiKey}>
-                <input
-                  type="text"
-                  value={qrzApiKey}
-                  onChange={(e) => setQrzApiKey(e.target.value)}
-                  placeholder="username:password or just username"
-                  className="form-control"
-                />
-                <button 
-                  type="submit" 
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showQrzKey ? 'text' : 'password'}
+                    value={qrzApiKey}
+                    onChange={(e) => setQrzApiKey(e.target.value)}
+                    placeholder="username:password or just username"
+                    className="form-control"
+                    style={{ paddingRight: '40px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowQrzKey((v) => !v)}
+                    aria-label={showQrzKey ? 'Hide credentials' : 'Show credentials'}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '0',
+                      lineHeight: '1',
+                      fontSize: '18px',
+                      opacity: 0.6,
+                    }}
+                  >
+                    {showQrzKey ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                <button
+                  type="submit"
                   disabled={loading}
                   className="btn btn-primary"
                   style={{ marginTop: '10px' }}
