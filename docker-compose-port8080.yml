@@ -31,7 +31,7 @@ services:
       NODE_ENV: production
       RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
     volumes:
-      - ./backend/uploads:/app/uploads
+      - uploads_data:/app/uploads
     ports:
       - "5000:5000"
     depends_on:
@@ -60,5 +60,7 @@ networks:
 
 volumes:
   mongodb_data:
+    driver: local
+  uploads_data:
     driver: local
 
