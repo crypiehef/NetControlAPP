@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { lookupCallsign } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -12,19 +12,30 @@ const CheckInForm = ({ onSubmit }) => {
     notes: ''
   });
   const [loading, setLoading] = useState(false);
+  const callsignRef = useRef(null);
 
-  const handleCallsignChange = async (e) => {
+  const handleCallsignChange = (e) => {
     const callsign = e.target.value.toUpperCase();
-    setFormData({ ...formData, callsign });
+    setFormData(prev => ({ ...prev, callsign }));
+  };
 
-    // Auto-lookup after 3 characters
-    if (callsign.length >= 3) {
+  // Auto-lookup after 3 characters, debounced so typing is never interrupted
+  useEffect(() => {
+    const callsign = formData.callsign;
+    if (callsign.length < 3) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
       setLoading(true);
       try {
         const result = await lookupCallsign(callsign);
-        if (result && result.name) {
-          setFormData(prev => ({ 
-            ...prev, 
+        // Ignore stale results if the callsign changed while looking up
+        if (!cancelled && result && result.name) {
+          setFormData(prev => ({
+            ...prev,
             name: result.name,
             location: result.location || '',
             license_class: result.license_class || ''
@@ -35,10 +46,15 @@ const CheckInForm = ({ onSubmit }) => {
         // Silently fail - user can manually enter name
         console.log('Callsign lookup failed, manual entry allowed');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
-  };
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [formData.callsign]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -48,6 +64,7 @@ const CheckInForm = ({ onSubmit }) => {
     }
     onSubmit(formData);
     setFormData({ callsign: '', name: '', location: '', license_class: '', stayingForComments: false, notes: '' });
+    callsignRef.current?.focus();
   };
 
   return (
@@ -57,12 +74,12 @@ const CheckInForm = ({ onSubmit }) => {
         <input
           type="text"
           id="callsign"
+          ref={callsignRef}
           value={formData.callsign}
           onChange={handleCallsignChange}
           placeholder="Enter callsign"
           required
           className="form-control"
-          disabled={loading}
         />
         {loading && <span className="loading-text">Looking up...</span>}
       </div>
@@ -138,4 +155,3 @@ const CheckInForm = ({ onSubmit }) => {
 };
 
 export default CheckInForm;
-
