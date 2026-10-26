@@ -98,7 +98,7 @@ docker-compose exec backend env | grep JWT_SECRET
 
 ```bash
 # Net Control by K4HEF - Environment Configuration
-JWT_SECRET=a89bb25035a1d03c1343059025c96da2f7b74a73d4b858edba44a37a5c50a262143e602bcc60c3cdb5e9bd06461e7ad66e4c482f2282ed2538c4ea5bdf641f40
+JWT_SECRET=your_generated_random_string_here  # openssl rand -base64 32
 MONGODB_URI=mongodb://mongodb:27017/netcontrolapp
 PORT=5000
 NODE_ENV=production

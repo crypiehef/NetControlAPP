@@ -21,9 +21,8 @@ echo.
 REM Check if .env file exists
 if not exist .env (
     echo 📝 Creating .env file...
-    echo JWT_SECRET=NetControl2024SecureKeyForYorkCountyAmateurRadioSociety_ChangeInProduction > .env
-    echo ✅ .env file created
-    echo ⚠️  Remember to change JWT_SECRET in production!
+    powershell -NoProfile -Command "$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); 'JWT_SECRET=' + [Convert]::ToBase64String($b) | Out-File -Encoding ascii .env"
+    echo ✅ .env file created with a randomly generated JWT_SECRET
 ) else (
     echo ✅ .env file already exists
 )
