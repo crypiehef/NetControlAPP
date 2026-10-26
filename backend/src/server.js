@@ -7,6 +7,11 @@ const connectDB = require('./config/database');
 
 const app = express();
 
+// Trust only the nginx frontend hop so req.ip (and rate limiting) uses the real client IP.
+// Override with TRUST_PROXY (hop count or proxy-addr list); never use `true`, which lets clients spoof X-Forwarded-For.
+const trustProxy = process.env.TRUST_PROXY ?? '1';
+app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
+
 // Connect to MongoDB
 connectDB();
 
