@@ -9,18 +9,21 @@ import {
   completeNetOperation,
   deleteCheckIn,
   updateCheckInNotes,
-  updateCheckInCommented
+  updateCheckInCommented,
+  getCheckInCounts,
+  getSettings
 } from '../services/api';
 import { toast } from 'react-toastify';
+import { buildNetFormDefaults, formatStation } from '../utils/netDefaults';
 
 const NetControl = () => {
   const { user } = useAuth();
   const [activeNet, setActiveNet] = useState(null);
   const [netInfo, setNetInfo] = useState({
-    netName: 'York County Amateur Radio Society Net',
-    frequency: '',
+    ...buildNetFormDefaults(null, user),
     notes: ''
   });
+  const [checkInCounts, setCheckInCounts] = useState({});
   const [showStartForm, setShowStartForm] = useState(true);
   const [editingCheckIn, setEditingCheckIn] = useState(null);
   const [editCheckInNotesText, setEditCheckInNotesText] = useState('');
@@ -28,7 +31,28 @@ const NetControl = () => {
 
   useEffect(() => {
     loadActiveNet();
+    loadNetDefaults();
   }, []);
+
+  // Refresh running check-in counts whenever the check-in list changes
+  useEffect(() => {
+    if (!activeNet?._id) {
+      setCheckInCounts({});
+      return;
+    }
+    getCheckInCounts(activeNet._id)
+      .then(setCheckInCounts)
+      .catch((error) => console.error('Error loading check-in counts:', error));
+  }, [activeNet?._id, activeNet?.checkIns?.length]);
+
+  const loadNetDefaults = async () => {
+    try {
+      const settings = await getSettings();
+      setNetInfo({ ...buildNetFormDefaults(settings, user), notes: '' });
+    } catch (error) {
+      console.error('Error loading net defaults:', error);
+    }
+  };
 
   const loadActiveNet = async () => {
     try {
@@ -87,6 +111,7 @@ const NetControl = () => {
       toast.success('Net operation completed!');
       setActiveNet(null);
       setShowStartForm(true);
+      loadNetDefaults();
     } catch (error) {
       toast.error('Failed to complete net');
     }
@@ -192,6 +217,71 @@ const NetControl = () => {
               </div>
 
               <div className="form-group">
+                <label htmlFor="clubName">Club Name</label>
+                <input
+                  type="text"
+                  id="clubName"
+                  value={netInfo.clubName}
+                  onChange={(e) => setNetInfo({ ...netInfo, clubName: e.target.value })}
+                  className="form-control"
+                  maxLength={100}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="netControllerCallsign">Net Controller Callsign</label>
+                  <input
+                    type="text"
+                    id="netControllerCallsign"
+                    value={netInfo.netControllerCallsign}
+                    onChange={(e) => setNetInfo({ ...netInfo, netControllerCallsign: e.target.value.toUpperCase() })}
+                    className="form-control"
+                    maxLength={10}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="netControllerName">Net Controller Name</label>
+                  <input
+                    type="text"
+                    id="netControllerName"
+                    value={netInfo.netControllerName}
+                    onChange={(e) => setNetInfo({ ...netInfo, netControllerName: e.target.value })}
+                    className="form-control"
+                    maxLength={100}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="loggerCallsign">Logger Callsign</label>
+                  <input
+                    type="text"
+                    id="loggerCallsign"
+                    value={netInfo.loggerCallsign}
+                    onChange={(e) => setNetInfo({ ...netInfo, loggerCallsign: e.target.value.toUpperCase() })}
+                    className="form-control"
+                    maxLength={10}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="loggerName">Logger Name</label>
+                  <input
+                    type="text"
+                    id="loggerName"
+                    value={netInfo.loggerName}
+                    onChange={(e) => setNetInfo({ ...netInfo, loggerName: e.target.value })}
+                    className="form-control"
+                    maxLength={100}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label htmlFor="frequency">Frequency</label>
                 <input
                   type="text"
@@ -225,7 +315,11 @@ const NetControl = () => {
             <div className="net-info-card">
               <h2>{activeNet?.netName}</h2>
               <div className="net-details">
-                <p><strong>Net Control:</strong> {activeNet?.operatorCallsign}</p>
+                {activeNet?.clubName && <p><strong>Club:</strong> {activeNet.clubName}</p>}
+                <p><strong>Net Control:</strong> {formatStation(activeNet?.netControllerCallsign || activeNet?.operatorCallsign, activeNet?.netControllerName)}</p>
+                {(activeNet?.loggerCallsign || activeNet?.loggerName) && (
+                  <p><strong>Logger:</strong> {formatStation(activeNet.loggerCallsign, activeNet.loggerName)}</p>
+                )}
                 <p><strong>Started:</strong> {activeNet && new Date(activeNet.startTime).toLocaleString()}</p>
                 {activeNet?.frequency && <p><strong>Frequency:</strong> {activeNet.frequency}</p>}
                 <p><strong>Check-ins:</strong> {activeNet?.checkIns.length || 0}</p>
@@ -262,6 +356,7 @@ const NetControl = () => {
                       <tr>
                         <th>#</th>
                         <th>Callsign</th>
+                        <th title="Number of nets with this name this station has checked into">Check-ins</th>
                         <th>Name</th>
                         <th>License Class</th>
                         <th>Location</th>
@@ -277,6 +372,9 @@ const NetControl = () => {
                         <tr key={checkIn._id}>
                           <td>{index + 1}</td>
                           <td className="callsign-cell">{checkIn.callsign}</td>
+                          <td>
+                            <span className="checkin-count-badge">{checkInCounts[checkIn.callsign] || 1}</span>
+                          </td>
                           <td>{checkIn.name}</td>
                           <td>{checkIn.license_class || '-'}</td>
                           <td>{checkIn.location || '-'}</td>

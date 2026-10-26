@@ -21,6 +21,14 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Defaults used to pre-fill the Start Net and Schedule forms
+  netDefaults: {
+    clubName: { type: String, trim: true, default: '' },
+    netName: { type: String, trim: true, default: '' },
+    frequency: { type: String, trim: true, default: '' },
+    netControllerCallsign: { type: String, trim: true, uppercase: true, default: '' },
+    netControllerName: { type: String, trim: true, default: '' }
+  },
   updatedAt: {
     type: Date,
     default: Date.now

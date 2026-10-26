@@ -3,6 +3,15 @@ import Navbar from '../components/Navbar';
 import { useTheme } from '../contexts/ThemeContext';
 import { getSettings, updateSettings, uploadLogo, deleteLogo } from '../services/api';
 import { toast } from 'react-toastify';
+import { FALLBACK_NET_NAME } from '../utils/netDefaults';
+
+const EMPTY_NET_DEFAULTS = {
+  clubName: '',
+  netName: '',
+  frequency: '',
+  netControllerCallsign: '',
+  netControllerName: ''
+};
 
 const Settings = () => {
   const { theme, toggleTheme, updateLogo } = useTheme();
@@ -11,6 +20,7 @@ const Settings = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [loading, setLoading] = useState(false);
+  const [netDefaults, setNetDefaults] = useState(EMPTY_NET_DEFAULTS);
 
   useEffect(() => {
     loadSettings();
@@ -20,6 +30,7 @@ const Settings = () => {
     try {
       const settings = await getSettings();
       setQrzApiKey(settings.qrzApiKey || '');
+      setNetDefaults({ ...EMPTY_NET_DEFAULTS, ...settings.netDefaults });
       if (settings.logo) {
         setLogoPreview(settings.logo);
       }
@@ -41,6 +52,22 @@ const Settings = () => {
       setLoading(false);
     }
   };
+
+  const handleSaveNetDefaults = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const settings = await updateSettings({ netDefaults });
+      setNetDefaults({ ...EMPTY_NET_DEFAULTS, ...settings.netDefaults });
+      toast.success('Net defaults saved!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to save net defaults');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateNetDefault = (key) => (e) => setNetDefaults({ ...netDefaults, [key]: e.target.value });
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -107,6 +134,82 @@ const Settings = () => {
               <button onClick={toggleTheme} className="btn btn-secondary">
                 {theme === 'light' ? '🌙 Switch to Dark Mode' : '☀️ Switch to Light Mode'}
               </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h2>Net Setup</h2>
+          <div className="setting-item">
+            <div className="setting-info">
+              <h3>Net Defaults</h3>
+              <p>Pre-fill these values when you start or schedule a new net. They also appear on net reports.</p>
+            </div>
+            <div className="setting-control">
+              <form onSubmit={handleSaveNetDefaults}>
+                <div className="form-group">
+                  <label htmlFor="defaultClubName">Club Name</label>
+                  <input
+                    type="text"
+                    id="defaultClubName"
+                    value={netDefaults.clubName}
+                    onChange={updateNetDefault('clubName')}
+                    className="form-control"
+                    maxLength={100}
+                    placeholder="e.g., York County Amateur Radio Society"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="defaultNetName">Default Net Name</label>
+                  <input
+                    type="text"
+                    id="defaultNetName"
+                    value={netDefaults.netName}
+                    onChange={updateNetDefault('netName')}
+                    className="form-control"
+                    maxLength={100}
+                    placeholder={netDefaults.clubName ? `${netDefaults.clubName} Net` : FALLBACK_NET_NAME}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="defaultFrequency">Default Frequency</label>
+                  <input
+                    type="text"
+                    id="defaultFrequency"
+                    value={netDefaults.frequency}
+                    onChange={updateNetDefault('frequency')}
+                    className="form-control"
+                    maxLength={50}
+                    placeholder="e.g., 146.520 MHz"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="defaultControllerCallsign">Net Controller Callsign</label>
+                  <input
+                    type="text"
+                    id="defaultControllerCallsign"
+                    value={netDefaults.netControllerCallsign}
+                    onChange={(e) => setNetDefaults({ ...netDefaults, netControllerCallsign: e.target.value.toUpperCase() })}
+                    className="form-control"
+                    maxLength={10}
+                    placeholder="Defaults to your callsign"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="defaultControllerName">Net Controller Name</label>
+                  <input
+                    type="text"
+                    id="defaultControllerName"
+                    value={netDefaults.netControllerName}
+                    onChange={updateNetDefault('netControllerName')}
+                    className="form-control"
+                    maxLength={100}
+                  />
+                </div>
+                <button type="submit" disabled={loading} className="btn btn-primary">
+                  {loading ? 'Saving...' : 'Save Net Defaults'}
+                </button>
+              </form>
             </div>
           </div>
         </div>

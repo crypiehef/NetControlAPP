@@ -4,6 +4,7 @@ const {
   createNetOperation,
   getNetOperations,
   getNetOperation,
+  getCheckInCounts,
   updateNetOperation,
   addCheckIn,
   lookupCallsign,
@@ -31,6 +32,7 @@ router.post('/schedule', apiLimiter, auth, validateNetOperation, scheduleNetOper
 router.get('/', apiLimiter, auth, validateReportQuery, getNetOperations);
 router.get('/lookup/:callsign', apiLimiter, auth, lookupCallsign);
 router.get('/:id', apiLimiter, auth, validateMongoId, getNetOperation);
+router.get('/:id/checkin-counts', apiLimiter, auth, validateMongoId, getCheckInCounts);
 router.put('/:id', apiLimiter, auth, validateMongoId, validateNetOperation, updateNetOperation);
 router.put('/:id/complete', apiLimiter, auth, validateMongoId, completeNetOperation);
 router.put('/:id/start', apiLimiter, auth, validateMongoId, startScheduledNet);

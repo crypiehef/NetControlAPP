@@ -3,24 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Navbar from '../components/Navbar';
-import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes, updateCheckInNotes, updateCheckInCommented } from '../services/api';
+import { getNetOperations, exportNetOperationPDF, deleteNetOperation, scheduleNetOperation, startScheduledNet, updateNetNotes, updateCheckInNotes, updateCheckInCommented, getSettings } from '../services/api';
 import { toast } from 'react-toastify';
+import { useAuth } from '../contexts/AuthContext';
+import { buildNetFormDefaults, formatStation } from '../utils/netDefaults';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
 const Schedule = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [operations, setOperations] = useState([]);
   const [selectedDateOps, setSelectedDateOps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
-  const [scheduleData, setScheduleData] = useState({
-    netName: 'York County Amateur Radio Society Net',
-    frequency: '',
+  const [netDefaults, setNetDefaults] = useState(() => buildNetFormDefaults(null, user));
+  const emptyScheduleData = (defaults) => ({
+    ...defaults,
     notes: '',
     startTime: '',
     recurrence: 'none'
   });
+  const [scheduleData, setScheduleData] = useState(() => emptyScheduleData(netDefaults));
   const [editingNotes, setEditingNotes] = useState(null);
   const [editNotesText, setEditNotesText] = useState('');
   const [editingCheckIn, setEditingCheckIn] = useState(null);
@@ -28,7 +32,18 @@ const Schedule = () => {
 
   useEffect(() => {
     loadOperations();
+    loadNetDefaults();
   }, []);
+
+  const loadNetDefaults = async () => {
+    try {
+      const defaults = buildNetFormDefaults(await getSettings(), user);
+      setNetDefaults(defaults);
+      setScheduleData(emptyScheduleData(defaults));
+    } catch (error) {
+      console.error('Error loading net defaults:', error);
+    }
+  };
 
   useEffect(() => {
     filterOperationsByDate(selectedDate);
@@ -106,13 +121,7 @@ const Schedule = () => {
     try {
       const result = await scheduleNetOperation(scheduleData);
       toast.success(result.message);
-      setScheduleData({
-        netName: 'York County Amateur Radio Society Net',
-        frequency: '',
-        notes: '',
-        startTime: '',
-        recurrence: 'none'
-      });
+      setScheduleData(emptyScheduleData(netDefaults));
       setShowScheduleForm(false);
       loadOperations();
     } catch (error) {
@@ -239,6 +248,71 @@ const Schedule = () => {
               </div>
 
               <div className="form-group">
+                <label htmlFor="clubName">Club Name</label>
+                <input
+                  type="text"
+                  id="clubName"
+                  value={scheduleData.clubName}
+                  onChange={(e) => setScheduleData({ ...scheduleData, clubName: e.target.value })}
+                  className="form-control"
+                  maxLength={100}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="netControllerCallsign">Net Controller Callsign</label>
+                  <input
+                    type="text"
+                    id="netControllerCallsign"
+                    value={scheduleData.netControllerCallsign}
+                    onChange={(e) => setScheduleData({ ...scheduleData, netControllerCallsign: e.target.value.toUpperCase() })}
+                    className="form-control"
+                    maxLength={10}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="netControllerName">Net Controller Name</label>
+                  <input
+                    type="text"
+                    id="netControllerName"
+                    value={scheduleData.netControllerName}
+                    onChange={(e) => setScheduleData({ ...scheduleData, netControllerName: e.target.value })}
+                    className="form-control"
+                    maxLength={100}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="loggerCallsign">Logger Callsign</label>
+                  <input
+                    type="text"
+                    id="loggerCallsign"
+                    value={scheduleData.loggerCallsign}
+                    onChange={(e) => setScheduleData({ ...scheduleData, loggerCallsign: e.target.value.toUpperCase() })}
+                    className="form-control"
+                    maxLength={10}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="loggerName">Logger Name</label>
+                  <input
+                    type="text"
+                    id="loggerName"
+                    value={scheduleData.loggerName}
+                    onChange={(e) => setScheduleData({ ...scheduleData, loggerName: e.target.value })}
+                    className="form-control"
+                    maxLength={100}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label htmlFor="startTime">Date & Time</label>
                 <input
                   type="datetime-local"
@@ -352,7 +426,11 @@ const Schedule = () => {
                     </div>
 
                     <div className="operation-info">
-                      <p><strong>Net Control:</strong> {op.operatorCallsign}</p>
+                      {op.clubName && <p><strong>Club:</strong> {op.clubName}</p>}
+                      <p><strong>Net Control:</strong> {formatStation(op.netControllerCallsign || op.operatorCallsign, op.netControllerName)}</p>
+                      {(op.loggerCallsign || op.loggerName) && (
+                        <p><strong>Logger:</strong> {formatStation(op.loggerCallsign, op.loggerName)}</p>
+                      )}
                       {op.frequency && <p><strong>Frequency:</strong> {op.frequency}</p>}
                       <p><strong>Total Check-ins:</strong> {op.checkIns.length}</p>
                       

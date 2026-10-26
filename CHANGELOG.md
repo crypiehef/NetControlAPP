@@ -5,6 +5,19 @@ All notable changes to the Net Control by K4HEF project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Settings → Net Setup: save a club name, default net name, frequency and net controller call/name; these pre-fill the Start Net and Schedule forms
+- Net controller and optional logger call sign/name on new and scheduled nets, shown on the active net card and schedule details
+- Club, net controller and logger on the single-net PDF and the admin operations report
+- Running check-in count per call sign (nets with the same name, up to that net) on the live check-in list and the single-net PDF
+- `GET /api/net-operations/:id/checkin-counts` endpoint
+
+### Fixed
+- Single-net PDF check-in rows printed each cell one line lower than the last; footer spilled onto a blank second page
+- Admin operations report failed with "switchToPage out of bounds" whenever it ran past one page
+
 ## [2.2.4] - 2024-10-27
 
 ### Added

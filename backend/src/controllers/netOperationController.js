@@ -4,6 +4,43 @@ const qrzService = require('../services/qrzService');
 const pdfService = require('../services/pdfService');
 const path = require('path');
 
+// Net controller / logger fields accepted when starting or scheduling a net
+const STAFF_FIELDS = ['clubName', 'netControllerCallsign', 'netControllerName', 'loggerCallsign', 'loggerName'];
+
+const pickStaffFields = (body) => {
+  const picked = {};
+  STAFF_FIELDS.forEach(key => {
+    if (typeof body[key] === 'string') picked[key] = body[key];
+  });
+  return picked;
+};
+
+// Count, per callsign, how many nets with this net's name each station has checked into
+// (up to and including this net). Each net counts once per callsign.
+const getCheckInCountsFor = async (netOperation) => {
+  const callsigns = [...new Set(netOperation.checkIns.map(c => c.callsign))];
+  if (callsigns.length === 0) return {};
+
+  const results = await NetOperation.aggregate([
+    {
+      $match: {
+        netName: { $eq: netOperation.netName || '' },
+        status: { $in: ['active', 'completed'] },
+        startTime: { $lte: netOperation.startTime }
+      }
+    },
+    { $unwind: '$checkIns' },
+    { $match: { 'checkIns.callsign': { $in: callsigns } } },
+    { $group: { _id: { callsign: '$checkIns.callsign', net: '$_id' } } },
+    { $group: { _id: '$_id.callsign', count: { $sum: 1 } } }
+  ]).collation({ locale: 'en', strength: 2 }); // case-insensitive net name match
+
+  return results.reduce((counts, r) => {
+    counts[r._id] = r.count;
+    return counts;
+  }, {});
+};
+
 // @desc    Create new net operation
 // @route   POST /api/net-operations
 // @access  Private
@@ -17,6 +54,7 @@ exports.createNetOperation = async (req, res) => {
       netName,
       frequency,
       notes,
+      ...pickStaffFields(req.body),
       status: 'active'
     });
 
@@ -94,6 +132,23 @@ exports.getNetOperation = async (req, res) => {
   }
 };
 
+// @desc    Get running check-in counts per callsign for nets with the same name
+// @route   GET /api/net-operations/:id/checkin-counts
+// @access  Private
+exports.getCheckInCounts = async (req, res) => {
+  try {
+    const netOperation = await NetOperation.findById(req.params.id);
+
+    if (!netOperation) {
+      return res.status(404).json({ error: 'Net operation not found' });
+    }
+
+    res.json(await getCheckInCountsFor(netOperation));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // @desc    Update net operation
 // @route   PUT /api/net-operations/:id
 // @access  Private
@@ -111,7 +166,7 @@ exports.updateNetOperation = async (req, res) => {
     }
 
     // Only allow specific fields to be updated with strict validation
-    const allowedUpdates = ['name', 'description', 'frequency', 'notes'];
+    const allowedUpdates = ['name', 'description', 'frequency', 'notes', ...STAFF_FIELDS];
     const updates = {};
     
     // Sanitize function
@@ -275,7 +330,8 @@ exports.exportToPDF = async (req, res) => {
       logoPath = path.join(__dirname, '../../uploads', path.basename(settings.logo));
     }
 
-    const pdfBuffer = await pdfService.generateNetOperationPDF(netOperation, logoPath);
+    const checkInCounts = await getCheckInCountsFor(netOperation);
+    const pdfBuffer = await pdfService.generateNetOperationPDF(netOperation, logoPath, checkInCounts);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=net-operation-${netOperation._id}.pdf`);
@@ -343,6 +399,7 @@ exports.deleteNetOperation = async (req, res) => {
 exports.scheduleNetOperation = async (req, res) => {
   try {
     const { netName, frequency, notes, startTime, recurrence } = req.body;
+    const staffFields = pickStaffFields(req.body);
 
     const scheduledOps = [];
     const baseDate = new Date(startTime);
@@ -354,6 +411,7 @@ exports.scheduleNetOperation = async (req, res) => {
       netName,
       frequency,
       notes,
+      ...staffFields,
       startTime: baseDate,
       status: 'scheduled',
       isScheduled: true,
@@ -410,6 +468,7 @@ exports.scheduleNetOperation = async (req, res) => {
           netName,
           frequency,
           notes,
+          ...staffFields,
           startTime: nextDate,
           status: 'scheduled',
           isScheduled: true,

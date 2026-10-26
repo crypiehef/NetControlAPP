@@ -65,6 +65,33 @@ const netOperationSchema = new mongoose.Schema({
     type: String,
     default: 'York County Amateur Radio Society Net'
   },
+  clubName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  netControllerCallsign: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    default: ''
+  },
+  netControllerName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  loggerCallsign: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    default: ''
+  },
+  loggerName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   frequency: {
     type: String,
     trim: true
@@ -93,6 +120,8 @@ const netOperationSchema = new mongoose.Schema({
 
 // Index for efficient querying by date
 netOperationSchema.index({ startTime: -1 });
+// Index for per-net check-in counts
+netOperationSchema.index({ netName: 1 });
 
 module.exports = mongoose.model('NetOperation', netOperationSchema);
 
