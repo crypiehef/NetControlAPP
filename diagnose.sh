@@ -60,9 +60,13 @@ if [ -f .env ]; then
     echo "✅ .env file exists"
 else
     echo "⚠️  .env file not found, creating one..."
-    cat > .env << 'EOF'
-JWT_SECRET=NetControl2024SecureKeyForYorkCountyAmateurRadioSociety_ChangeInProduction
-EOF
+    if command -v openssl &> /dev/null; then
+        JWT_SECRET=$(openssl rand -base64 32)
+    else
+        JWT_SECRET=$(head -c 32 /dev/urandom | base64)
+    fi
+    echo "JWT_SECRET=${JWT_SECRET}" > .env
+    unset JWT_SECRET
     echo "✅ .env file created"
 fi
 

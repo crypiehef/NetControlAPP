@@ -101,9 +101,7 @@ docker-compose logs
 1. **Missing .env file:**
 ```bash
 cd "/Volumes/1 TB SSD/Net/NetControlApp"
-cat > .env << 'EOF'
-JWT_SECRET=NetControl2024SecureKeyForYorkCountyAmateurRadioSociety
-EOF
+echo "JWT_SECRET=$(openssl rand -base64 32)" > .env
 ```
 
 2. **MongoDB not starting:**
@@ -173,6 +171,31 @@ docker-compose down --rmi all
 # Start fresh
 docker-compose up -d --build
 ```
+
+### Issue 7: Locked Out / Forgot Admin Password
+
+Use this when you are locked out of an account (for example the only admin
+account) or need to rotate a password without the web UI. Run it inside the
+backend container:
+
+```bash
+docker exec -it netcontrol-backend node src/scripts/resetPassword.js <username>
+```
+
+The script asks for the new password twice with hidden input. The password
+must be at least 12 characters and is never printed or logged. Optional flags:
+
+- `--enable` also enables the account (useful after registering the first user)
+- `--admin` also gives the account the admin role
+
+```bash
+# Example: reset, enable and promote a freshly registered account
+docker exec -it netcontrol-backend node src/scripts/resetPassword.js <username> --enable --admin
+```
+
+For non-interactive use (no terminal attached), pass the password in the
+`NEW_PASSWORD` environment variable instead. Don't put the password on the
+command line itself: it ends up in your shell history.
 
 ## Step-by-Step Startup Process
 

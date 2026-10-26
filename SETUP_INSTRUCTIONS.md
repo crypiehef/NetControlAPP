@@ -16,10 +16,9 @@ cd "NetControlApp"
 ### Step 3: Configure Environment
 Create a `.env` file in the root directory:
 ```bash
-cat > .env << 'EOF'
-JWT_SECRET=NetControl2024SecureKeyForYorkCountyAmateurRadioSociety
-EOF
+echo "JWT_SECRET=$(openssl rand -base64 32)" > .env
 ```
+(`./start.sh` does this for you if `.env` doesn't exist yet.)
 
 ### Step 4: Start the Application
 ```bash
@@ -117,6 +116,31 @@ docker-compose up -d --build
 docker-compose down -v
 docker-compose up -d
 ```
+
+### Reset a Password
+
+Use this when you are locked out of an account (for example the only admin
+account) or need to rotate a password without the web UI. Run it inside the
+backend container:
+
+```bash
+docker exec -it netcontrol-backend node src/scripts/resetPassword.js <username>
+```
+
+The script asks for the new password twice with hidden input. The password
+must be at least 12 characters and is never printed or logged. Optional flags:
+
+- `--enable` also enables the account (useful after registering the first user)
+- `--admin` also gives the account the admin role
+
+```bash
+# Example: reset, enable and promote a freshly registered account
+docker exec -it netcontrol-backend node src/scripts/resetPassword.js <username> --enable --admin
+```
+
+For non-interactive use (no terminal attached), pass the password in the
+`NEW_PASSWORD` environment variable instead. Don't put the password on the
+command line itself: it ends up in your shell history.
 
 ## Support
 

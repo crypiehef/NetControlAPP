@@ -43,11 +43,14 @@ echo ""
 # Check if .env file exists
 if [ ! -f .env ]; then
     echo "📝 Creating .env file..."
-    cat > .env << 'EOF'
-JWT_SECRET=NetControl2024SecureKeyForYorkCountyAmateurRadioSociety_ChangeInProduction
-EOF
-    echo "✅ .env file created"
-    echo "⚠️  Remember to change JWT_SECRET in production!"
+    if command -v openssl &> /dev/null; then
+        JWT_SECRET=$(openssl rand -base64 32)
+    else
+        JWT_SECRET=$(head -c 32 /dev/urandom | base64)
+    fi
+    echo "JWT_SECRET=${JWT_SECRET}" > .env
+    unset JWT_SECRET
+    echo "✅ .env file created with a randomly generated JWT_SECRET"
 else
     echo "✅ .env file already exists"
 fi
