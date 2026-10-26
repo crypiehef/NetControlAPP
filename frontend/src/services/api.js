@@ -18,6 +18,11 @@ export const getNetOperation = async (id) => {
   return response.data;
 };
 
+export const getCheckInCounts = async (id) => {
+  const response = await axios.get(`${API_URL}/net-operations/${id}/checkin-counts`);
+  return response.data;
+};
+
 export const updateNetOperation = async (id, data) => {
   const response = await axios.put(`${API_URL}/net-operations/${id}`, data);
   return response.data;

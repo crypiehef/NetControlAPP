@@ -41,6 +41,53 @@ const validateNetOperation = [
     .isString()
     .isLength({ max: 1000 })
     .customSanitizer(sanitizeString),
+  body('netName')
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .customSanitizer(sanitizeString),
+  body('clubName')
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .customSanitizer(sanitizeString),
+  body(['netControllerCallsign', 'loggerCallsign'])
+    .optional()
+    .isString()
+    .isLength({ max: 10 })
+    .customSanitizer(val => sanitizeString(val).toUpperCase()),
+  body(['netControllerName', 'loggerName'])
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .customSanitizer(sanitizeString),
+  handleValidationErrors
+];
+
+const validateSettings = [
+  body('netDefaults')
+    .optional()
+    .isObject(),
+  body(['netDefaults.clubName', 'netDefaults.netName'])
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .customSanitizer(sanitizeString),
+  body('netDefaults.frequency')
+    .optional()
+    .isString()
+    .isLength({ max: 50 })
+    .customSanitizer(sanitizeString),
+  body('netDefaults.netControllerCallsign')
+    .optional()
+    .isString()
+    .isLength({ max: 10 })
+    .customSanitizer(val => sanitizeString(val).toUpperCase()),
+  body('netDefaults.netControllerName')
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .customSanitizer(sanitizeString),
   handleValidationErrors
 ];
 
@@ -122,6 +169,7 @@ const validateReportQuery = [
 
 module.exports = {
   validateNetOperation,
+  validateSettings,
   validateCheckIn,
   validateUpdateUser,
   validateMongoId,

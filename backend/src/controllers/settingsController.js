@@ -2,6 +2,17 @@ const Settings = require('../models/Settings');
 const path = require('path');
 const fs = require('fs');
 
+const NET_DEFAULT_FIELDS = ['clubName', 'netName', 'frequency', 'netControllerCallsign', 'netControllerName'];
+
+// Keep only known string fields from a netDefaults payload
+const pickNetDefaults = (netDefaults = {}) => {
+  const picked = {};
+  NET_DEFAULT_FIELDS.forEach(key => {
+    if (typeof netDefaults[key] === 'string') picked[key] = netDefaults[key];
+  });
+  return picked;
+};
+
 // @desc    Get user settings
 // @route   GET /api/settings
 // @access  Private
@@ -27,7 +38,7 @@ exports.getSettings = async (req, res) => {
 // @access  Private
 exports.updateSettings = async (req, res) => {
   try {
-    const { theme, qrzApiKey } = req.body;
+    const { theme, qrzApiKey, netDefaults } = req.body;
 
     let settings = await Settings.findOne({ userId: req.user._id });
 
@@ -35,11 +46,15 @@ exports.updateSettings = async (req, res) => {
       settings = await Settings.create({
         userId: req.user._id,
         theme,
-        qrzApiKey
+        qrzApiKey,
+        netDefaults: pickNetDefaults(netDefaults)
       });
     } else {
       if (theme) settings.theme = theme;
       if (qrzApiKey !== undefined) settings.qrzApiKey = qrzApiKey;
+      if (netDefaults) {
+        Object.assign(settings.netDefaults, pickNetDefaults(netDefaults));
+      }
       await settings.save();
     }
 

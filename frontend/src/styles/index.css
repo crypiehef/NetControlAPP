@@ -239,6 +239,20 @@ body {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+/* Side-by-side form fields (e.g. callsign + name) */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 textarea.form-control {
   resize: vertical;
 }
@@ -393,6 +407,19 @@ textarea.form-control {
 .status-badge.scheduled {
   background-color: rgba(245, 158, 11, 0.1);
   color: var(--warning-color);
+}
+
+/* Running check-in count next to a logged check-in */
+.checkin-count-badge {
+  display: inline-block;
+  min-width: 2rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 .operation-details p {

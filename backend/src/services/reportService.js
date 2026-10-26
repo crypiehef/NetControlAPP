@@ -5,7 +5,7 @@ const path = require('path');
 class ReportService {
   async generateOperationsReport(operations, filters, logoPath = null) {
     return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
+      const doc = new PDFDocument({ margin: 50, size: 'LETTER', bufferPages: true });
       const chunks = [];
 
       doc.on('data', chunk => chunks.push(chunk));
@@ -92,7 +92,16 @@ class ReportService {
             .text(`${index + 1}. ${op.netName} - ${op.status.toUpperCase()}`);
 
           doc.fontSize(9);
+          if (op.clubName) {
+            doc.text(`   Club: ${op.clubName}`);
+          }
           doc.text(`   Operator: ${op.operatorCallsign}`);
+          if (op.netControllerCallsign || op.netControllerName) {
+            doc.text(`   Net Controller: ${[op.netControllerCallsign, op.netControllerName].filter(Boolean).join(' - ')}`);
+          }
+          if (op.loggerCallsign || op.loggerName) {
+            doc.text(`   Logger: ${[op.loggerCallsign, op.loggerName].filter(Boolean).join(' - ')}`);
+          }
           doc.text(`   Start: ${new Date(op.startTime).toLocaleString()}`);
           if (op.endTime) {
             doc.text(`   End: ${new Date(op.endTime).toLocaleString()}`);
@@ -138,6 +147,8 @@ class ReportService {
         const pageCount = doc.bufferedPageRange().count;
         for (let i = 0; i < pageCount; i++) {
           doc.switchToPage(i);
+          // Footer sits inside the bottom margin; drop it so PDFKit doesn't add a new page
+          doc.page.margins.bottom = 0;
           doc.fontSize(8)
             .text(
               `Page ${i + 1} of ${pageCount}`,
